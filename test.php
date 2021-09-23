@@ -5,7 +5,7 @@ use Eaw\Models\Customer;
 
 require('autoload.php');
 
-$eaw = new Client();
+$eaw = Client::getInstance();
 
 //$eaw->clientAuth(5, 'abc123');
 $eaw->userAuth('jim@easyatwork.com', 'abc123');

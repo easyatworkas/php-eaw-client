@@ -2,23 +2,13 @@
 
 namespace Eaw;
 
+use Eaw\Traits\Singleton;
 use GuzzleHttp\Client as Guzzle;
 use Psr\Http\Message\ResponseInterface;
 
 class Client
 {
-    /**
-     * @var self Singleton.
-     */
-    protected static $instance;
-
-    /**
-     * @return self
-     */
-    public static function getInstance()
-    {
-        return self::$instance;
-    }
+    use Singleton;
 
     /**
      * @var Guzzle https://docs.guzzlephp.org/en/6.5/
@@ -37,15 +27,9 @@ class Client
         'Content-Type' => 'application/x-www-form-urlencoded',
     ];
 
-    public function __construct(array $options = [])
+    protected function __construct()
     {
         $this->guzzle = new Guzzle();
-
-        foreach ($options as $option => $value) {
-            $this->$option = $value;
-        }
-
-        self::$instance = $this;
     }
 
     /**
