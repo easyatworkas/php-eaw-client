@@ -4,7 +4,6 @@ namespace Eaw;
 
 use Eaw\Traits\Singleton;
 use GuzzleHttp\Client as Guzzle;
-use Psr\Http\Message\ResponseInterface;
 
 class Client
 {
@@ -23,9 +22,7 @@ class Client
     /**
      * @var string[] Headers to include in all requests.
      */
-    protected $headers = [
-        'Content-Type' => 'application/x-www-form-urlencoded',
-    ];
+    protected $headers = [];
 
     protected function __construct()
     {
@@ -37,7 +34,7 @@ class Client
      * @param string $path
      * @param array|null $parameters
      * @param array|null $data
-     * @return ResponseInterface
+     * @return array
      */
     protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null)
     {
@@ -47,10 +44,12 @@ class Client
             $url .= '?' . http_build_query($parameters);
         }
 
-        return $this->guzzle->request($method, $url, array_filter([
+        $response = $this->guzzle->request($method, $url, array_filter([
             'headers' => $this->headers,
-            'body' => $data === null ? null : http_build_query($data),
+            'json' => $data,
         ]));
+
+        return json_decode($response->getBody(), true);
     }
 
     /**
@@ -59,7 +58,7 @@ class Client
      * @param string $path
      * @param array|null $parameters
      * @param array|null $data
-     * @return ResponseInterface
+     * @return array
      */
     public function create(string $path, array $parameters = null, array $data = null)
     {
@@ -71,7 +70,7 @@ class Client
      *
      * @param string $path
      * @param array|null $parameters
-     * @return ResponseInterface
+     * @return array
      */
     public function read(string $path, array $parameters = null)
     {
@@ -84,7 +83,7 @@ class Client
      * @param string $path
      * @param array|null $parameters
      * @param array|null $data
-     * @return ResponseInterface
+     * @return array
      */
     public function update(string $path, array $parameters = null, array $data = null)
     {
@@ -97,7 +96,7 @@ class Client
      * @param string $path
      * @param array|null $parameters
      * @param array|null $data
-     * @return ResponseInterface
+     * @return array
      */
     public function delete(string $path, array $parameters = null, array $data = null)
     {
@@ -112,14 +111,8 @@ class Client
     {
         $response = $this->create('/oauth/token', null, $data);
 
-        if ($response->getStatusCode() != Http::OK) {
-            return false;
-        }
-
-        $data = json_decode($response->getBody(), true);
-
         // TODO: Store token and expires_in somewhere more permanent.
-        $this->headers['Authorization'] = $data['token_type'] . ' ' . $data['access_token'];
+        $this->headers['Authorization'] = $response['token_type'] . ' ' . $response['access_token'];
 
         return true;
     }
