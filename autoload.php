@@ -7,3 +7,7 @@ spl_autoload_register(function ($class) {
         require($file);
     }
 });
+
+if (file_exists('functions.php')) {
+    require('functions.php');
+}
