@@ -1,2 +1,2 @@
 #!/bin/sh
-php sh.php "$@@
+php sh.php "$@"
