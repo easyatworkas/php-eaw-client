@@ -1,7 +1,8 @@
 {
     "require": {
         "guzzlehttp/guzzle": "6.5",
-        "ext-json": "*"
+        "ext-json": "*",
+        "vlucas/phpdotenv": "^4.2"
     },
     "require-dev": {
         "psy/psysh": "@stable"
