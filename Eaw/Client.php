@@ -63,6 +63,13 @@ class Client
             }
 
             foreach ($files as $name => $file) {
+                if (is_resource($file)) {
+                    $file = [
+                        'handle' => $file,
+                        'filename' => stream_get_meta_data($file)['uri'] ?? null,
+                    ];
+                }
+
                 $options['multipart'][] = array_filter([
                     'name' => $name,
                     'contents' => $file['handle'] ?? null,
