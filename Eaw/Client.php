@@ -36,7 +36,7 @@ class Client
      * @param array|null $data
      * @return array
      */
-    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null)
+    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null)
     {
         $url = $this->baseUrl . $path;
 
@@ -44,10 +44,36 @@ class Client
             $url .= '?' . http_build_query($parameters);
         }
 
-        $response = $this->guzzle->request($method, $url, array_filter([
+        $options = [
             'headers' => $this->headers,
-            'json' => $data,
-        ]));
+            'multipart' => [],
+        ];
+
+        if ($files) {
+            if ($data) {
+                // Super hacky way to build a multipart request.
+                foreach (explode('&', http_build_query($data)) as $pair) {
+                    list($var, $val) = explode('=', $pair, 2);
+
+                    $options['multipart'][] = [
+                        'name' => urldecode($var),
+                        'value' => urldecode($val),
+                    ];
+                }
+            }
+
+            foreach ($files as $name => $file) {
+                $options['multipart'][] = array_filter([
+                    'name' => $name,
+                    'contents' => $file['handle'] ?? null,
+                    'filename' => $file['filename'] ?? null,
+                ]);
+            }
+        } else {
+            $options['json'] = $data;
+        }
+
+        $response = $this->guzzle->request($method, $url, array_filter($options));
 
         return json_decode($response->getBody(), true);
     }
@@ -58,11 +84,12 @@ class Client
      * @param string $path
      * @param array|null $parameters
      * @param array|null $data
+     * @param array $files
      * @return array
      */
-    public function create(string $path, array $parameters = null, array $data = null)
+    public function create(string $path, array $parameters = null, array $data = null, array $files = null)
     {
-        return $this->request('POST', $path, $parameters, $data);
+        return $this->request('POST', $path, $parameters, $data, $files);
     }
 
     /**
