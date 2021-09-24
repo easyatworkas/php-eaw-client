@@ -26,6 +26,15 @@ eaw()->update('/customers/1', null, [ 'number' => 1337 ]);
 eaw()->delete('/customers/1');
 ```
 
+Working with paginated responses is also easy, using the Paginator iterator. It will automatically load pages as required.
+```php
+$employees = eaw()->readPaginated('/customers/1/employees', [ 'per_page' => 3 ]);
+
+foreach ($employees as $employee) {
+    echo $employee['name'], PHP_EOL;
+}
+```
+
 ### As a CLI
 
 This is a work in progress. URL parameters and POST data is still not passable.
