@@ -145,4 +145,18 @@ class Client
             'password' => $password,
         ]);
     }
+
+    /**
+     * @param string $path
+     * @param array $parameters
+     * @return Paginator
+     */
+    public function readPaginated(string $path, array $parameters)
+    {
+        return new Paginator(
+            $this->read($path, $parameters),
+            $path,
+            $parameters
+        );
+    }
 }
