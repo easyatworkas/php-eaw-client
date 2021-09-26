@@ -6,6 +6,9 @@ use Iterator;
 
 class Paginator implements Iterator
 {
+    /** @var Client */
+    protected $client;
+
     /** @var array Meta data from paginated response. */
     protected $meta;
 
@@ -22,13 +25,17 @@ class Paginator implements Iterator
 
     protected $query;
 
-    public function __construct(array $response, string $path = null, array $query = [])
+    public function __construct(Client $client, string $path = null, array $query = [])
     {
-        $this->init($response, $path, $query);
+        $this->client = $client;
+        $this->path = $path;
+        $this->query = $query;
     }
 
-    protected function init(array $response, string $path, array $query)
+    protected function init(string $path, array $query)
     {
+        $response = $this->client->read($path, $query);
+
         $this->data = $response['data'] ?? [];
         unset($response['data']);
         $this->meta = $response;
@@ -68,7 +75,7 @@ class Paginator implements Iterator
     {
         $this->i = 0;
 
-        // TODO: Go to page 1?
+        $this->loadPage(1);
     }
 
     protected function currentPage()
@@ -90,8 +97,6 @@ class Paginator implements Iterator
     {
         $this->query['page'] = $page;
 
-        $response = eaw()->read($this->path, $this->query);
-
-        $this->init($response, $this->path, $this->query);
+        $this->init($this->path, $this->query);
     }
 }

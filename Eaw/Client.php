@@ -188,7 +188,7 @@ class Client
     public function readPaginated(string $path, array $parameters = [])
     {
         return new Paginator(
-            $this->read($path, $parameters),
+            $this,
             $path,
             $parameters
         );
