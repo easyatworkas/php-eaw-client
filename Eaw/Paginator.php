@@ -67,6 +67,8 @@ class Paginator implements Iterator
         if (!$this->valid() && $this->hasNextPage()) {
             $this->loadPage($this->currentPage() + 1);
         }
+
+        return $this;
     }
 
     public function key()
@@ -84,6 +86,8 @@ class Paginator implements Iterator
         $this->i = 0;
 
         $this->loadPage(1);
+
+        return $this;
     }
 
     protected function currentPage()
@@ -106,11 +110,15 @@ class Paginator implements Iterator
         $this->query['page'] = $page;
 
         $this->init($this->path, $this->query);
+
+        return $this;
     }
 
     public function setMapper(callable $mapper)
     {
         $this->mapper = $mapper;
+
+        return $this;
     }
 
     /**
@@ -120,5 +128,14 @@ class Paginator implements Iterator
     public function all()
     {
         return iterator_to_array($this, false);
+    }
+
+    public function each(callable $callback)
+    {
+        foreach ($this as $key => $value) {
+            call_user_func($callback, $value, $key);
+        }
+
+        return $this;
     }
 }
