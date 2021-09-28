@@ -1,6 +1,6 @@
 <?php
 
-require('bootstrap/bootstrap.php');
+require(__DIR__ . '/bootstrap/bootstrap.php');
 
 (function () {
     if (method_exists($eaw = eaw(), $command = $_SERVER['argv'][1] ?? null)) {

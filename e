@@ -1,2 +1,2 @@
 #!/bin/sh
-php sh.php "$@"
+php "`dirname $0`/sh.php" "$@"
