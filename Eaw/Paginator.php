@@ -25,6 +25,8 @@ class Paginator implements Iterator
 
     protected $query;
 
+    protected $mapper;
+
     public function __construct(Client $client, string $path = null, array $query = [])
     {
         $this->client = $client;
@@ -49,7 +51,13 @@ class Paginator implements Iterator
 
     public function current()
     {
-        return $this->data[$this->i] ?? null;
+        $value = $this->data[$this->i] ?? null;
+
+        if ($this->mapper !== null) {
+            $value = call_user_func($this->mapper, $value);
+        }
+
+        return $value;
     }
 
     public function next()
@@ -98,5 +106,19 @@ class Paginator implements Iterator
         $this->query['page'] = $page;
 
         $this->init($this->path, $this->query);
+    }
+
+    public function setMapper(callable $mapper)
+    {
+        $this->mapper = $mapper;
+    }
+
+    /**
+     * @deprecated Don't use this method unless you really have to have everything from all pages.
+     * @return array
+     */
+    public function all()
+    {
+        return iterator_to_array($this, false);
     }
 }

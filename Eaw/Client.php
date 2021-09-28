@@ -80,6 +80,13 @@ class Client
             $options['json'] = $data;
         }
 
+        /*print_r([
+            'method' => $method,
+            'path' => $path,
+            'parameters' => $parameters,
+            'data' => $data,
+        ]);*/
+
         $response = $this->guzzle->request($method, $url, array_filter($options));
 
         return json_decode($response->getBody(), true);
@@ -192,5 +199,10 @@ class Client
             $path,
             $parameters
         );
+    }
+
+    public function query(string $path)
+    {
+        return new QueryBuilder($this, $path);
     }
 }
