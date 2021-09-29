@@ -2,6 +2,8 @@
 
 require(__DIR__ . '/autoload.php');
 
+require(__DIR__ . '/../readline.php');
+
 require(__DIR__ . '/../functions.php');
 
 (function () {
