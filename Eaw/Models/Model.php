@@ -63,6 +63,11 @@ abstract class Model
         $this->original = $this->attributes;
     }
 
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
     public function getAttribute($name)
     {
         return $this->attributes[$name] ?? null;
