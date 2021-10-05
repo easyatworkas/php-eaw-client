@@ -10,6 +10,15 @@ class Customer extends Model
 
     protected $path = '/customers';
 
+    public function settingGroup()
+    {
+        $instance = SettingGroup::newInstance([
+            'id' => $this->getAttribute('setting_group_id'),
+        ]);
+
+        return SettingGroup::newQuery($instance->getFullPath());
+    }
+
     public function employees()
     {
         return $this->client->query($this->getFullPath() . '/employees')->setModel(Employee::class);
