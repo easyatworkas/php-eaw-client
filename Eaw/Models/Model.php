@@ -2,19 +2,20 @@
 
 namespace Eaw\Models;
 
+use ArrayAccess;
 use Eaw\Client;
+use Eaw\Traits\HasAttributes;
+use JsonSerializable;
 
-abstract class Model
+abstract class Model implements ArrayAccess, JsonSerializable
 {
+    use HasAttributes;
+
     protected $path;
 
     protected $keyName = 'id';
 
     protected $client;
-
-    protected $attributes;
-
-    protected $original;
 
     public static function newQuery(string $path = null)
     {
@@ -34,7 +35,8 @@ abstract class Model
     public function __construct(Client $client, array $attributes)
     {
         $this->client = $client;
-        $this->attributes = $attributes;
+
+        $this->setAttributes($attributes);
 
         if ($this->exists()) {
             $this->syncOriginal();
@@ -58,54 +60,14 @@ abstract class Model
         return $this->getPath() . '/' . $this->getKey();
     }
 
-    public function syncOriginal()
-    {
-        $this->original = $this->attributes;
-    }
-
-    public function getAttributes()
-    {
-        return $this->attributes;
-    }
-
-    public function getAttribute($name)
-    {
-        return $this->attributes[$name] ?? null;
-    }
-
-    public function getOriginal($name)
-    {
-        return $this->original[$name] ?? null;
-    }
-
-    public function getDirty()
-    {
-        $dirty = [];
-
-        $keys = array_unique(array_merge(array_keys($this->original), array_keys($this->attributes)));
-
-        foreach ($keys as $key) {
-            if ($this->getOriginal($key) != $this->getAttribute($key)) {
-                $dirty[$key] = $this->getAttribute($key);
-            }
-        }
-
-        return $dirty;
-    }
-
-    public function isDirty()
-    {
-        return (bool) $this->getDirty();
-    }
-
     public function getKey()
     {
-        return $this->attributes[$this->keyName] ?? null;
+        return $this->getAttribute($this->keyName);
     }
 
     public function exists()
     {
-        return $this->getKey() !== null;
+        return $this->hasAttribute($this->keyName);
     }
 
     public function save()
@@ -114,21 +76,11 @@ abstract class Model
         if ($this->exists()) {
             $this->attributes = $this->client->update($this->getFullPath(), [], $this->getDirty());
         } else {
-            $this->attributes = $this->client->create($this->getPath(), [], $this->attributes);
+            $this->attributes = $this->client->create($this->getPath(), [], $this->getAttributes());
         }
 
         $this->syncOriginal();
 
         return true;
-    }
-
-    public function __get($name)
-    {
-        return $this->attributes[$name] ?? null;
-    }
-
-    public function __set($name, $value)
-    {
-        $this->attributes[$name] = $value;
     }
 }
