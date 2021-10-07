@@ -1,2 +1,2 @@
 @echo off
-php %~dp0\sh.php %*
+php %~dp0\eaw.php %*
