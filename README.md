@@ -52,7 +52,7 @@ Customer::get(1)->update([ 'number' => 1337 ]);
 Customer::get(1)->delete();
 
 // Handle paginated responses.
-$employees = Customer::get(1)->employees()->getAll();
+$employees = Employee::customer(1)->getAll();
 foreach ($employees as $employee) {
     echo $employee->name, PHP_EOL;
 }
