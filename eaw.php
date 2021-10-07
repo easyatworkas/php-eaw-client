@@ -1,8 +1,8 @@
 <?php
 
 use Eaw\Models\Model;
+use Eaw\Shell;
 use Psy\Configuration;
-use Psy\Shell;
 use Symfony\Component\VarDumper\Caster\Caster;
 
 require(__DIR__ . '/bootstrap/bootstrap.php');
