@@ -83,4 +83,24 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
         return true;
     }
+
+    public function update(array $attributes)
+    {
+        foreach ($attributes as $attribute => $value) {
+            $this->setAttribute($attribute, $value);
+        }
+
+        return $this->save();
+    }
+
+    public function delete()
+    {
+        if (!$this->exists()) {
+            return false;
+        }
+
+        $this->client->delete($this->getFullPath());
+
+        return true;
+    }
 }
