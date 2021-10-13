@@ -32,6 +32,8 @@ class Paginator implements Iterator
         $this->client = $client;
         $this->path = $path;
         $this->query = $query;
+
+        $this->rewind();
     }
 
     protected function init(string $path, array $query)
@@ -83,6 +85,7 @@ class Paginator implements Iterator
 
     public function rewind()
     {
+        // loadPage() calls init(), which does reset i, but only if we're not already on page 1.
         $this->i = 0;
 
         $this->loadPage(1);
@@ -105,11 +108,13 @@ class Paginator implements Iterator
         return $this->currentPage() < $this->lastPage();
     }
 
-    public function loadPage(int $page)
+    public function loadPage(int $page, bool $force = false)
     {
-        $this->query['page'] = $page;
+        if ($page != $this->currentPage() || $force) {
+            $this->query['page'] = $page;
 
-        $this->init($this->path, $this->query);
+            $this->init($this->path, $this->query);
+        }
 
         return $this;
     }
