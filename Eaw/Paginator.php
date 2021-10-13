@@ -4,6 +4,14 @@ namespace Eaw;
 
 use Iterator;
 
+/**
+ * @property int $current_page
+ * @property int $last_page
+ * @property int $from
+ * @property int $to
+ * @property int $per_page
+ * @property int $total
+ */
 class Paginator implements Iterator
 {
     /** @var Client */
@@ -67,7 +75,7 @@ class Paginator implements Iterator
         $this->i++;
 
         if (!$this->valid() && $this->hasNextPage()) {
-            $this->loadPage($this->currentPage() + 1);
+            $this->loadPage($this->current_page + 1);
         }
 
         return $this;
@@ -93,24 +101,14 @@ class Paginator implements Iterator
         return $this;
     }
 
-    protected function currentPage()
-    {
-        return $this->meta['current_page'] ?? null;
-    }
-
-    protected function lastPage()
-    {
-        return $this->meta['last_page'] ?? null;
-    }
-
     protected function hasNextPage()
     {
-        return $this->currentPage() < $this->lastPage();
+        return $this->current_page < $this->last_page;
     }
 
     public function loadPage(int $page, bool $force = false)
     {
-        if ($page != $this->currentPage() || $force) {
+        if ($page != $this->current_page || $force) {
             $this->query['page'] = $page;
 
             $this->init($this->path, $this->query);
