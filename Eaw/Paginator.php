@@ -138,4 +138,9 @@ class Paginator implements Iterator
 
         return $this;
     }
+
+    public function __get($var)
+    {
+        return $this->meta[$var] ?? null;
+    }
 }
