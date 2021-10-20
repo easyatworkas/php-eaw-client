@@ -27,7 +27,7 @@ Copy `.env.example` to `.env`, then edit `.env` and add your authentication deta
 
 ### <a name="usage-shell"></a>As a shell
 
-There are convenience scripts for Linux and Windows (`e` and `e.bat`) provided in the repo. You can optionally pass the path to a PHP file to execute in inside the shell environment.
+There are convenience scripts for Linux and Windows (`e` and `e.bat`) provided in the repo. You can optionally pass the path to a PHP file to execute it inside the shell environment.
 ```sh
 ./e <PHP file>
 ```
