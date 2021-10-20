@@ -46,6 +46,10 @@ class Logger extends AbstractLogger
                 $message = $this->color($message, static::DARK + static::GREEN);
                 break;
 
+            case LogLevel::NOTICE:
+                $message = $this->color($message, static::DARK + static::YELLOW);
+                break;
+
             case LogLevel::ERROR:
                 $message = $this->color($message, static::DARK + static::RED);
                 break;
