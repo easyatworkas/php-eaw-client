@@ -2,7 +2,8 @@
     "require": {
         "guzzlehttp/guzzle": "6.5",
         "ext-json": "*",
-        "vlucas/phpdotenv": "^4.2"
+        "vlucas/phpdotenv": "^4.2",
+        "psr/log": "^1.1"
     },
     "require-dev": {
         "psy/psysh": "@stable"

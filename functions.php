@@ -24,6 +24,14 @@ function eaw()
     return \Eaw\Client::getInstance();
 }
 
+/**
+ * @return \Eaw\Logger
+ */
+function logger()
+{
+    return \Eaw\Logger::getInstance();
+}
+
 function tabelize(array $data, array $header = [], int $padding = 2)
 {
     // Find all column names.

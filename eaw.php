@@ -1,5 +1,6 @@
 <?php
 
+use Eaw\Logger;
 use Eaw\Models\Model;
 use Eaw\Shell;
 use Psy\Configuration;
@@ -27,6 +28,10 @@ $config->getPresenter()->addCasters([
         return $result;
     }
 ]);
+
+logger()->setFormatter(function (Logger $logger, string $level, string $message, array $context) {
+    return $logger->color('[' . date('Y-m-d H:i:s') . '] ', $logger::DARK + $logger::YELLOW) . $message;
+});
 
 $shell = new Shell($config);
 $shell->setIncludes($_SERVER['argv']);
