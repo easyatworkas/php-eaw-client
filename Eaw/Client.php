@@ -97,6 +97,8 @@ class Client
                     sleep(10);
                     continue;
                 }
+
+                throw $exception;
             }
 
             break;
