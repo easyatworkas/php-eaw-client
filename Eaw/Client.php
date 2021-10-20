@@ -4,6 +4,7 @@ namespace Eaw;
 
 use Eaw\Traits\Singleton;
 use GuzzleHttp\Client as Guzzle;
+use GuzzleHttp\Exception\ClientException;
 
 class Client
 {
@@ -87,7 +88,19 @@ class Client
             'data' => $data,
         ]);*/
 
-        $response = $this->guzzle->request($method, $url, array_filter($options));
+        while (true) {
+            try {
+                $response = $this->guzzle->request($method, $url, array_filter($options));
+            } catch (ClientException $exception) {
+                if ($exception->getResponse()->getStatusCode() == 429) {
+                    logger()->notice('Rate limit reached. Retrying in 10 seconds...');
+                    sleep(10);
+                    continue;
+                }
+            }
+
+            break;
+        }
 
         return json_decode($response->getBody(), true);
     }
