@@ -92,7 +92,7 @@ logger()->info('Things are happening...');
 logger()->notice('You should probably be aware...');
 logger()->error('Things did not go well :(');
 
-// Disabling the build-in formatter and/or EOL.
+// Disabling the built-in formatter and/or EOL.
 logger()->info('Hello, World!', [ 'formatter' => false, 'eol' => false ]);
 ```
 
