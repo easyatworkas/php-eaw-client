@@ -85,6 +85,17 @@ foreach ($employees as $employee) {
 }
 ```
 
+#### Logging
+```php
+// Basic log levels.
+logger()->info('Things are happening...');
+logger()->notice('You should probably be aware...');
+logger()->error('Things did not go well :(');
+
+// Disabling the build-in formatter and/or EOL.
+logger()->info('Hello, World!', [ 'formatter' => false, 'eol' => false ]);
+```
+
 ### <a name="usage-standalone"></a>In a stand-alone script
 
 Stand-alone scripts do not need to be launched via `./e`, but can instead be invoked directly; `php my_script.php`. All you need to do is include the bootstrapper, and you're ready to go:
