@@ -4,6 +4,7 @@ use Eaw\Logger;
 use Eaw\Models\Model;
 use Eaw\Shell;
 use Psy\Configuration;
+use Psy\VersionUpdater\Checker;
 use Symfony\Component\VarDumper\Caster\Caster;
 
 require(__DIR__ . '/bootstrap/bootstrap.php');
@@ -17,6 +18,7 @@ require(__DIR__ . '/bootstrap/bootstrap.php');
 })();
 
 $config = new Configuration();
+$config->setUpdateCheck(Checker::NEVER);
 $config->getPresenter()->addCasters([
     Model::class => function (Model $model) {
         $result = [];
