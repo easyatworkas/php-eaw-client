@@ -29,9 +29,21 @@ class Logger extends AbstractLogger
     /** @var callable */
     protected $formatter;
 
+    protected $indentLevel = 0;
+
     public function setFormatter(callable $formatter)
     {
         $this->formatter = $formatter;
+    }
+
+    public function group()
+    {
+        $this->indentLevel++;
+    }
+
+    public function ungroup()
+    {
+        $this->indentLevel--;
     }
 
     public function color(string $string, int $color)
@@ -39,29 +51,47 @@ class Logger extends AbstractLogger
         return sprintf(static::ESCAPE, $color) . $string . sprintf(static::ESCAPE, static::DEFAULT);
     }
 
-    public function log($level, $message, array $context = [])
+    protected function format(self $self, string $level, string $message, array $context)
     {
-        switch ($level) {
-            case LogLevel::INFO:
-                $message = $this->color($message, static::DARK + static::GREEN);
-                break;
+        if ($context['indent'] ?? false) {
+            $message = str_repeat('  ', $context['indent']) . $message;
+        }
 
-            case LogLevel::NOTICE:
-                $message = $this->color($message, static::DARK + static::YELLOW);
-                break;
+        if ($context['color']) {
+            $message = $this->color($message, $context['color']);
+        }
 
-            case LogLevel::ERROR:
-                $message = $this->color($message, static::DARK + static::RED);
-                break;
+        if ($context['timestamp'] ?? true) {
+            $message = $this->color('[' . date('Y-m-d H:i:s') . ']', static::DARK + static::YELLOW) . ' ' . $message;
         }
 
         if ($context['eol'] ?? true) {
             $message .= PHP_EOL;
         }
 
-        if ($formatter = $context['formatter'] ?? $this->formatter) {
-            $message = call_user_func($formatter, $this, $level, $message, $context);
-        }
+        return $message;
+    }
+
+    /**
+     * @param mixed $level
+     * @param string $message
+     * @param array{indent?: int, color?: int, timestamp?: bool, eol?: bool} $context
+     */
+    public function log($level, $message, array $context = [])
+    {
+        $context['color'] = $context['color'] ?? (function ($level) {
+            switch ($level) {
+                case LogLevel::INFO: return static::DARK + static::GREEN;
+                case LogLevel::NOTICE: return static::DARK + static::YELLOW;
+                case LogLevel::ERROR: return static::DARK + static::RED;
+            }
+        })($level);
+
+        $context['indent'] = $context['indent'] ?? $this->indentLevel;
+
+        $context['formatter'] = $context['formatter'] ?? $this->formatter ?? [ $this, 'format' ];
+
+        $message = call_user_func_array($context['formatter'], [ $this, $level, $message, $context ]);
 
         fwrite(STDERR, $message);
     }

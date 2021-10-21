@@ -6,10 +6,6 @@ require(__DIR__ . '/../readline.php');
 
 require(__DIR__ . '/../functions.php');
 
-logger()->setFormatter(function (Eaw\Logger $logger, string $level, string $message, array $context) {
-    return $logger->color('[' . date('Y-m-d H:i:s') . '] ', $logger::DARK + $logger::YELLOW) . $message;
-});
-
 (function () {
     if ((null !== $username = env('username')) && (null !== $password = env('password'))) {
         return eaw()->userAuth($username, $password);
