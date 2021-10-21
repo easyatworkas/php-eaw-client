@@ -92,7 +92,7 @@ class Client
             try {
                 $response = $this->guzzle->request($method, $url, array_filter($options));
             } catch (ClientException $exception) {
-                if ($exception->getResponse()->getStatusCode() == 429) {
+                if ($exception->getCode() == 429) {
                     logger()->notice('Rate limit reached. Retrying in 10 seconds...');
                     sleep(10);
                     continue;
