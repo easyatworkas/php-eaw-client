@@ -1,5 +1,6 @@
 # PHP easy@work API client
 
+ * [Requirements](#requirements)
  * [Installation](#installation)
  * [Configuration](#configuration)
  * [Usage](#usage)
@@ -11,6 +12,11 @@
    * [Using API client directly](#examples-client) 
    * [Logging](#examples-logging)
    * [Bringing it all together](#examples-empexport)
+
+## <a name="requirements"></a>Requirements
+
+ * PHP 7.0+
+ * Composer
 
 ## <a name="installation"></a>Installation
 
