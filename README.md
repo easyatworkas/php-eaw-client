@@ -9,7 +9,8 @@
  * [Examples](#examples)
    * [Using Models](#examples-models) 
    * [Using API client directly](#examples-client) 
-   * [Logging](#examples-logging) 
+   * [Logging](#examples-logging)
+   * [Bringing it all together](#examples-empexport)
 
 ## <a name="installation"></a>Installation
 
@@ -70,7 +71,7 @@ $customer = Customer::newQuery()
     ->direction('asc')
     ->perPage(1)
     ->getAll() // Returns a Paginator
-    ->next(); // Return first item.
+    ->current(); // Return first item.
 
 // Fetch customer 1.
 $customer = Customer::get(1);
@@ -124,4 +125,57 @@ logger()->error('Things did not go well :(');
 
 // Disabling the built-in formatter and/or EOL.
 logger()->info('Hello, World!', [ 'formatter' => false, 'eol' => false ]);
+```
+
+#### <a name="examples-empexport"></a>Bringing it all together
+
+Here's a complete example that shows how to fetch all employees from all customers, then print their details to the console in a table.
+
+```php
+$table = [];
+
+logger()->info('Fetching customers...');
+
+$customers = Customer::newQuery()
+    ->orderBy('number')
+    ->direction('asc')
+    ->getAll();
+
+foreach ($customers as $customer) {
+    logger()->info($customer->name);
+    logger()->group();
+    logger()->info('Fetching employees...');
+
+    $employees = $customer->employees()
+        ->includeInactive(true)
+        ->orderBy('name')
+        ->direction('asc')
+        ->getAll();
+
+    foreach ($employees as $employee) {
+        logger()->info('.', [ 'timestamp' => false, 'indent' => false, 'eol' => false ]); // "Progress bar".
+
+        $table[] = [
+            'cust_number' => $customer->number,
+            'cust_name' => $customer->name,
+            'number' => $employee->number,
+            'name' => $employee->name,
+            'phone' => $employee->phone,
+            'email' => $employee->email,
+            'from' => $employee->from,
+            'to' => $employee->to,
+        ];
+    }
+
+    logger()->info('', [ 'timestamp' => false ]); // Newline after progress bar.
+    logger()->ungroup();
+}
+
+logger()->info('Done.');
+
+tabelize($table, [
+    'cust_number' => 'c#',
+    'cust_name' => 'location',
+    'number' => 'e#'
+]);
 ```
