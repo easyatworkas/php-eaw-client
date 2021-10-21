@@ -4,6 +4,7 @@ namespace Eaw\Models;
 
 use ArrayAccess;
 use Eaw\Client;
+use Eaw\QueryBuilder;
 use Eaw\Traits\HasAttributes;
 use JsonSerializable;
 
@@ -17,6 +18,10 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
     protected $client;
 
+    /**
+     * @param string|null $path
+     * @return QueryBuilder<static>
+     */
     public static function newQuery(string $path = null)
     {
         return eaw()->query($path ?? static::newInstance()->getPath())->setModel(static::class);

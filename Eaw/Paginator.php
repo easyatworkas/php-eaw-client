@@ -5,6 +5,7 @@ namespace Eaw;
 use Iterator;
 
 /**
+ * @template T
  * @property int $current_page
  * @property int $last_page
  * @property int $from
@@ -20,19 +21,22 @@ class Paginator implements Iterator
     /** @var array Meta data from paginated response. */
     protected $meta;
 
-    /** @var array The paginated data. */
+    /** @var array<int|string, T> The paginated data. */
     protected $data;
 
-    /** @var int[]|string[] All keys. */
+    /** @var array<int, int|string> All keys. */
     protected $keys;
 
     /** @var int Index of current key in $this->keys. */
     protected $i;
 
+    /** @var string */
     protected $path;
 
+    /** @var array */
     protected $query;
 
+    /** @var callable|null */
     protected $mapper;
 
     public function __construct(Client $client, string $path = null, array $query = [])
@@ -59,6 +63,9 @@ class Paginator implements Iterator
         $this->query = $query;
     }
 
+    /**
+     * @return T
+     */
     public function current()
     {
         $value = $this->data[$this->i] ?? null;
@@ -126,7 +133,7 @@ class Paginator implements Iterator
 
     /**
      * @deprecated Don't use this method unless you really have to have everything from all pages.
-     * @return array
+     * @return T[]
      */
     public function all()
     {

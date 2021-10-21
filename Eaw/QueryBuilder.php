@@ -2,16 +2,24 @@
 
 namespace Eaw;
 
+/**
+ * @template T
+ */
 class QueryBuilder
 {
+    /** @var Client */
     protected $client;
 
+    /** @var string */
     protected $path;
 
+    /** @var array */
     protected $pathVariables = [];
 
+    /** @var array */
     protected $query = [];
 
+    /** @var class-string<T> */
     protected $model;
 
     public function __construct(Client $client, string $path)
@@ -20,6 +28,10 @@ class QueryBuilder
         $this->path = $path;
     }
 
+    /**
+     * @param class-string<T> $model
+     * @return $this
+     */
     public function setModel(string $model)
     {
         $this->model = $model;
@@ -27,6 +39,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @return string[]
+     */
     protected function getPlaceholders()
     {
         preg_match_all('/{.+?}/', $this->path, $placeholders);
@@ -34,6 +49,9 @@ class QueryBuilder
         return $placeholders[0];
     }
 
+    /**
+     * @return string
+     */
     protected function getPath()
     {
         $path = $this->path;
@@ -45,6 +63,9 @@ class QueryBuilder
         return $path;
     }
 
+    /**
+     * @return array|T
+     */
     public function get($id = null)
     {
         $response = $this->client->read($this->getPath() . ($id === null ? '' : '/' . $id), $this->query);
@@ -56,6 +77,9 @@ class QueryBuilder
         return $response;
     }
 
+    /**
+     * @return Paginator<array|T>
+     */
     public function getAll()
     {
         $iterator = $this->client->readPaginated($this->getPath(), $this->query);
@@ -69,6 +93,11 @@ class QueryBuilder
         return $iterator;
     }
 
+    /**
+     * @param string $method
+     * @param array $arguments
+     * @return $this
+     */
     public function __call(string $method, array $arguments)
     {
         $parameter = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $method));;
