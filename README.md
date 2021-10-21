@@ -30,6 +30,8 @@ composer install
 
 Copy `.env.example` to `.env`, then edit `.env` and add your authentication details.
 
+**Optional:** Add the bin directory to your PATH to invoke `e` from anywhere.
+
 ## <a name="usage"></a>Usage
 
 ### <a name="usage-shell"></a>As a shell
