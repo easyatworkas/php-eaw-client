@@ -65,6 +65,11 @@ abstract class Model implements ArrayAccess, JsonSerializable
         return $this->getPath() . '/' . $this->getKey();
     }
 
+    public function setKey($value)
+    {
+        $this->setAttribute($this->keyName, $value);
+    }
+
     public function getKey()
     {
         return $this->getAttribute($this->keyName);
