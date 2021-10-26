@@ -3,9 +3,11 @@
         "guzzlehttp/guzzle": "6.5",
         "ext-json": "*",
         "vlucas/phpdotenv": "^4.2",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "peridot-php/peridot": "^1.19"
     },
     "require-dev": {
-        "psy/psysh": "@stable"
+        "psy/psysh": "@stable",
+        "peridot-php/peridot-prophecy-plugin": "~1.0"
     }
 }
