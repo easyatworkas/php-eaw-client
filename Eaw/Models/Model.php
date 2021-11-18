@@ -91,17 +91,19 @@ abstract class Model implements ArrayAccess, JsonSerializable
         return $this;
     }
 
-    public function replicate(array $except = [])
+    public function replicate(array $filter = [], bool $whitelist = false)
     {
-        $except = array_merge($except, [
-            $this->keyName,
-            $this->createdAtColumn,
-            $this->updatedAtColumn,
-            '_dates',
-            '_business_dates',
-        ]);
+        if (!$whitelist) {
+            $filter = array_merge($filter, [
+                $this->keyName,
+                $this->createdAtColumn,
+                $this->updatedAtColumn,
+                '_dates',
+                '_business_dates',
+            ]);
+        }
 
-        return new static($this->client, array_diff_key($this->attributes, array_flip($except)));
+        return new static($this->client, call_user_func($whitelist ? 'array_intersect_key' : 'array_diff_key', $this->attributes, array_flip($filter)));
     }
 
     public function save()
