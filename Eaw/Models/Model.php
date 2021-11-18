@@ -120,11 +120,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
     public function update(array $attributes)
     {
-        foreach ($attributes as $attribute => $value) {
-            $this->setAttribute($attribute, $value);
-        }
-
-        return $this->save();
+        return $this->fill($attributes)->save();
     }
 
     public function delete()
