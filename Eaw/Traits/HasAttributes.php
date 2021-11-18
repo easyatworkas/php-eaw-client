@@ -10,7 +10,7 @@ trait HasAttributes
 
     public function setAttributes(array $attributes)
     {
-        $this->attributes = $attributes;
+        return $this->attributes = $attributes;
     }
 
     public function getAttributes()
@@ -25,7 +25,7 @@ trait HasAttributes
 
     public function setAttribute($name, $value)
     {
-        $this->attributes[$name] = $value;
+        return $this->attributes[$name] = $value;
     }
 
     public function getAttribute($name)

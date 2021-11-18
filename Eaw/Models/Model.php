@@ -6,11 +6,13 @@ use ArrayAccess;
 use Eaw\Client;
 use Eaw\QueryBuilder;
 use Eaw\Traits\HasAttributes;
+use Eaw\Traits\HasTimestamps;
 use JsonSerializable;
 
 abstract class Model implements ArrayAccess, JsonSerializable
 {
     use HasAttributes;
+    use HasTimestamps;
 
     protected $path;
 
@@ -67,7 +69,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
     public function setKey($value)
     {
-        $this->setAttribute($this->keyName, $value);
+        return $this->setAttribute($this->keyName, $value);
     }
 
     public function getKey()
@@ -78,6 +80,28 @@ abstract class Model implements ArrayAccess, JsonSerializable
     public function exists()
     {
         return $this->hasAttribute($this->keyName);
+    }
+
+    public function fill(array $attributes)
+    {
+        foreach ($attributes as $attribute => $value) {
+            $this->setAttribute($attribute, $value);
+        }
+
+        return $this;
+    }
+
+    public function replicate(array $except = [])
+    {
+        $except = array_merge($except, [
+            $this->keyName,
+            $this->createdAtColumn,
+            $this->updatedAtColumn,
+            '_dates',
+            '_business_dates',
+        ]);
+
+        return new static($this->client, array_diff_key($this->attributes, array_flip($except)));
     }
 
     public function save()
