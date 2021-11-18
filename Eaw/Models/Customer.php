@@ -4,11 +4,13 @@ namespace Eaw\Models;
 
 use Eaw\Traits\HasProducts;
 use Eaw\Traits\HasProperties;
+use Eaw\Traits\HasReports;
 
 class Customer extends Model
 {
     use HasProperties;
     use HasProducts;
+    use HasReports;
 
     protected $path = '/customers';
 
