@@ -58,7 +58,7 @@ class Client
 
                     $options['multipart'][] = [
                         'name' => urldecode($var),
-                        'value' => urldecode($val),
+                        'contents' => urldecode($val),
                     ];
                 }
             }
