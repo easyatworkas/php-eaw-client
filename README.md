@@ -12,6 +12,7 @@
    * [Using API client directly](#examples-client) 
    * [Logging](#examples-logging)
    * [Bringing it all together](#examples-empexport)
+   * [Async requests](#async-requests)
 
 ## <a name="requirements"></a>Requirements
 
@@ -187,3 +188,22 @@ tabelize($table, [
     'number' => 'e#'
 ]);
 ```
+
+#### <a name="async-requests"></a>Async requests
+
+It is possible to run multiple requests in parallel to increase the efficiency of your code.
+
+```php
+$employees = eaw()->readPaginated('/customers/1/employees');
+
+foreach ($employees as $employee) {
+    eaw()->updateAsync("/customers/1/employees/{$employee['id']}/properties/cf_flexi", [ 'value' => false ])
+        .then(function (array $response) {
+            logger()->info("Flexi time for employee #{$employee['number']} has been disabled.");
+        });
+}
+
+eaw()->execute();
+```
+
+Keep in mind that we enfore a rate-limit on traffic to the API, and even though the client will retry throttled requests automatically, you should try to avoid it all toghether; especially when writing asynchrounous code, since the first throttled request won't stop subsequent requests from being made immediately.
