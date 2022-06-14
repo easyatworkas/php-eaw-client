@@ -6,8 +6,8 @@ use Psy\Shell as Psy;
 
 class Shell extends Psy
 {
-    protected function getHeader()
+    protected function getHeader(): string
     {
-        return null;
+        return '';
     }
 }
