@@ -5,6 +5,9 @@ namespace Eaw;
 use Eaw\Traits\Singleton;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Handler\CurlMultiHandler;
+use GuzzleHttp\Promise\PromiseInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class Client
 {
@@ -14,6 +17,11 @@ class Client
      * @var Guzzle https://docs.guzzlephp.org/en/6.5/
      */
     protected $guzzle;
+
+    /**
+     * @var CurlMultiHandler
+     */
+    protected $handler;
 
     /**
      * @var string Base API URL.
@@ -34,7 +42,13 @@ class Client
 
     protected function __construct()
     {
-        $this->guzzle = new Guzzle();
+        $this->handler = new CurlMultiHandler([
+            'select_timeout' => 0.1,
+        ]);
+
+        $this->guzzle = new Guzzle([
+            'handler' => $this->handler,
+        ]);
     }
 
     /**
@@ -47,13 +61,27 @@ class Client
     }
 
     /**
-     * @param string $method
+     * Tick the cURL event loop.
+     */
+    public function tick()
+    {
+        $this->handler->tick();
+    }
+
+    /**
+     * Tick until all requests have completed.
+     */
+    public function execute()
+    {
+        $this->handler->execute();
+    }
+
+    /**
      * @param string $path
      * @param array|null $parameters
-     * @param array|null $data
-     * @return array
+     * @return string
      */
-    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null)
+    protected function buildRequestUrl(string $path = '/', array $parameters = null)
     {
         $url = $this->baseUrl . $path;
 
@@ -61,6 +89,16 @@ class Client
             $url .= '?' . http_build_query($parameters);
         }
 
+        return $url;
+    }
+
+    /**
+     * @param array|null $data
+     * @param array|null $files
+     * @return array
+     */
+    protected function buildRequestOptions(array $data = null, array $files = null)
+    {
         $options = [
             'headers' => $this->headers,
             'multipart' => [],
@@ -97,32 +135,67 @@ class Client
             $options['json'] = $data;
         }
 
-        /*print_r([
-            'method' => $method,
-            'path' => $path,
-            'parameters' => $parameters,
-            'data' => $data,
-        ]);*/
+        return array_filter($options);
+    }
 
-        while (true) {
-            try {
-                $response = $this->guzzle->request($method, $url, array_filter($options));
-            } catch (ClientException $exception) {
-                if ($this->options['catch_rate_limit'] && $exception->getCode() == 429) {
-                    $retryAfter = $exception->getResponse()->getHeader('Retry-After')[0] ?? 10;
+    /**
+     * @param ResponseInterface $response
+     * @return bool
+     */
+    protected function handleRateLimit(ResponseInterface $response)
+    {
+        if ($this->options['catch_rate_limit'] && $response->getStatusCode() == 429) {
+            $retryAfter = $response->getHeader('Retry-After')[0] ?? 10;
 
-                    logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
-                    sleep($retryAfter);
-                    continue;
-                }
+            logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
+            sleep($retryAfter);
 
-                throw $exception;
-            }
-
-            break;
+            return true;
         }
 
-        return json_decode($response->getBody(), true);
+        return false;
+    }
+
+    /**
+     * @param string $method
+     * @param string $path
+     * @param array|null $parameters
+     * @param array|null $data
+     * @param array|null $files
+     * @return array
+     */
+    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null)
+    {
+        return $this->requestAsync($method, $path, $parameters, $data, $files)->wait();
+    }
+
+    /**
+     * @param string $method
+     * @param string $path
+     * @param array|null $parameters
+     * @param array|null $data
+     * @param array|null $files
+     * @return PromiseInterface<array>
+     */
+    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null)
+    {
+        return $this->guzzle->requestAsync(
+                $method,
+                $this->buildRequestUrl($path, $parameters),
+                $this->buildRequestOptions($data, $files)
+            )
+            ->then(function (ResponseInterface $response) {
+                return json_decode($response->getBody(), true);
+            })
+            ->otherwise(function (ClientException $exception) use ($method, $path, $parameters, $data, $files) {
+                $response = $exception->getResponse();
+
+                if ($this->handleRateLimit($response)) {
+                    return $this->requestAsync($method, $path, $parameters, $data, $files);
+                }
+
+                return json_decode($response->getBody(), true);
+            });
     }
 
     /**
@@ -140,6 +213,20 @@ class Client
     }
 
     /**
+     * Crud async.
+     *
+     * @param string $path
+     * @param array|null $parameters
+     * @param array|null $data
+     * @param array $files
+     * @return PromiseInterface<array>
+     */
+    public function createAsync(string $path, array $parameters = null, array $data = null, array $files = null)
+    {
+        return $this->requestAsync('POST', $path, $parameters, $data, $files);
+    }
+
+    /**
      * cRud.
      *
      * @param string $path
@@ -149,6 +236,18 @@ class Client
     public function read(string $path, array $parameters = null)
     {
         return $this->request('GET', $path, $parameters);
+    }
+
+    /**
+     * cRud async.
+     *
+     * @param string $path
+     * @param array|null $parameters
+     * @return PromiseInterface<array>
+     */
+    public function readAsync(string $path, array $parameters = null)
+    {
+        return $this->requestAsync('GET', $path, $parameters);
     }
 
     /**
@@ -165,6 +264,19 @@ class Client
     }
 
     /**
+     * crUd async.
+     *
+     * @param string $path
+     * @param array|null $parameters
+     * @param array|null $data
+     * @return PromiseInterface<array>
+     */
+    public function updateAsync(string $path, array $parameters = null, array $data = null)
+    {
+        return $this->requestAsync('PUT', $path, $parameters, $data);
+    }
+
+    /**
      * cruD.
      *
      * @param string $path
@@ -175,6 +287,19 @@ class Client
     public function delete(string $path, array $parameters = null, array $data = null)
     {
         return $this->request('DELETE', $path, $parameters, $data);
+    }
+
+    /**
+     * cruD async.
+     *
+     * @param string $path
+     * @param array|null $parameters
+     * @param array|null $data
+     * @return PromiseInterface<array>
+     */
+    public function deleteAsync(string $path, array $parameters = null, array $data = null)
+    {
+        return $this->requestAsync('DELETE', $path, $parameters, $data);
     }
 
     /**
@@ -234,6 +359,10 @@ class Client
         );
     }
 
+    /**
+     * @param string $path
+     * @return QueryBuilder
+     */
     public function query(string $path)
     {
         return new QueryBuilder($this, $path);
