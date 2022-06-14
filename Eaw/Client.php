@@ -25,9 +25,25 @@ class Client
      */
     protected $headers = [];
 
+    /**
+     * @var bool[] Client options.
+     */
+    protected $options = [
+        'catch_rate_limit' => true,
+    ];
+
     protected function __construct()
     {
         $this->guzzle = new Guzzle();
+    }
+
+    /**
+     * @param array $options
+     * @return array
+     */
+    public function setOptions(array $options)
+    {
+        return $this->options = $options + $this->options;
     }
 
     /**
@@ -92,7 +108,7 @@ class Client
             try {
                 $response = $this->guzzle->request($method, $url, array_filter($options));
             } catch (ClientException $exception) {
-                if ($exception->getCode() == 429) {
+                if ($this->options['catch_rate_limit'] && $exception->getCode() == 429) {
                     $retryAfter = $exception->getResponse()->getHeader('Retry-After')[0] ?? 10;
 
                     logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
