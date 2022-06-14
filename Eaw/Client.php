@@ -6,6 +6,7 @@ use Eaw\Traits\Singleton;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Handler\CurlMultiHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -47,7 +48,7 @@ class Client
         ]);
 
         $this->guzzle = new Guzzle([
-            'handler' => $this->handler,
+            'handler' => HandlerStack::create($this->handler),
         ]);
     }
 
@@ -140,17 +141,12 @@ class Client
 
     /**
      * @param ResponseInterface $response
-     * @return bool
+     * @return false|int
      */
-    protected function handleRateLimit(ResponseInterface $response)
+    protected function isRateLimited(ResponseInterface $response)
     {
         if ($this->options['catch_rate_limit'] && $response->getStatusCode() == 429) {
-            $retryAfter = $response->getHeader('Retry-After')[0] ?? 10;
-
-            logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
-            sleep($retryAfter);
-
-            return true;
+            return $response->getHeader('Retry-After')[0] ?? 10;
         }
 
         return false;
@@ -162,11 +158,12 @@ class Client
      * @param array|null $parameters
      * @param array|null $data
      * @param array|null $files
+     * @param array $options
      * @return array
      */
-    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null)
+    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = [])
     {
-        return $this->requestAsync($method, $path, $parameters, $data, $files)->wait();
+        return $this->requestAsync($method, $path, $parameters, $data, $files, $options)->wait(true);
     }
 
     /**
@@ -175,26 +172,29 @@ class Client
      * @param array|null $parameters
      * @param array|null $data
      * @param array|null $files
+     * @param array $options
      * @return PromiseInterface<array>
      */
-    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null)
+    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = [])
     {
         return $this->guzzle->requestAsync(
                 $method,
                 $this->buildRequestUrl($path, $parameters),
-                $this->buildRequestOptions($data, $files)
+                $this->buildRequestOptions($data, $files) + $options
             )
             ->then(function (ResponseInterface $response) {
                 return json_decode($response->getBody(), true);
             })
             ->otherwise(function (ClientException $exception) use ($method, $path, $parameters, $data, $files) {
-                $response = $exception->getResponse();
+                if (false !== $retryAfter = $this->isRateLimited($exception->getResponse())) {
+                    if ($retryAfter) {
+                        logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
+                    }
 
-                if ($this->handleRateLimit($response)) {
-                    return $this->requestAsync($method, $path, $parameters, $data, $files);
+                    return $this->requestAsync($method, $path, $parameters, $data, $files, [ 'delay' => $retryAfter * 1000 ]);
                 }
 
-                return json_decode($response->getBody(), true);
+                throw $exception;
             });
     }
 
