@@ -6,6 +6,11 @@ use Psy\Configuration;
 use Psy\VersionUpdater\Checker;
 use Symfony\Component\VarDumper\Caster\Caster;
 
+// Change console codepage to UTF-8 on (probably) Windows.
+if (DIRECTORY_SEPARATOR == '\\') {
+    `chcp 65001`;
+}
+
 require(__DIR__ . '/bootstrap/bootstrap.php');
 
 // TODO: Move this to Psy commands?
