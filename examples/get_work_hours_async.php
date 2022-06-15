@@ -12,31 +12,31 @@ $data = [];
 foreach ($customers as $customer) {
     logger()->info($customer['name'] . ' ...');
 
-    $cb = function (array $response) use (&$data, $customer) {
-        foreach ($response['data'] as $entity) {
-            $date = explode(' ', $entity['business_date'])[0];
-            $key = $customer['id'] . '-' . $date;
+    $cb = function (string $type) use (&$data, $customer) {
+        return function (array $response) use ($type, &$data, $customer) {
+            foreach ($response['data'] as $entity) {
+                $date = explode(' ', $entity['business_date'])[0];
+                $key = $customer['id'] . '-' . $date;
 
-            if (!array_key_exists($key, $data)) {
-                $data[$key] = [
-                    'depno' => $customer['number'],
-                    'depname' => $customer['name'],
-                    'date' => $date,
-                    'scheduled' => 0,
-                    'punched' => 0,
-                ];
+                if (!array_key_exists($key, $data)) {
+                    $data[$key] = [
+                        'depno' => $customer['number'],
+                        'depname' => $customer['name'],
+                        'date' => $date,
+                        'scheduled' => 0,
+                        'punched' => 0,
+                    ];
+                }
+
+                $data[$key][$type] += $entity['length'];
             }
 
-            $type = array_key_exists('schedule_id', $entity) ? 'scheduled' : 'punched';
-
-            $data[$key][$type] += $entity['length'];
-        }
-
-        logger()->info($customer['name'] . ' ' . logger()->color('OK', L::LIGHT + L::BLUE));
+            logger()->info($customer['name'] . ' ' . logger()->color($type, L::LIGHT + L::BLUE));
+        };
     };
 
-    eaw()->readAsync("/customers/{$customer['id']}/shifts", [ 'per_page' => 9999, 'from_business_date' => $from, 'to_business_date' => $to ])->then($cb);
-    eaw()->readAsync("/customers/{$customer['id']}/timepunches", [ 'per_page' => 9999, 'from' => $from, 'to' => $to ])->then($cb);
+    eaw()->readAsync("/customers/{$customer['id']}/shifts", [ 'per_page' => 9999, 'from_business_date' => $from, 'to_business_date' => $to ])->then($cb('scheduled'));
+    eaw()->readAsync("/customers/{$customer['id']}/timepunches", [ 'per_page' => 9999, 'from' => $from, 'to' => $to ])->then($cb('punched'));
 
     eaw()->tick();
 }
