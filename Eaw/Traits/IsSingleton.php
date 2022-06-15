@@ -4,8 +4,9 @@ namespace Eaw\Traits;
 
 use Exception;
 
-trait Singleton
+trait IsSingleton
 {
+    /** @var static */
     protected static $instance;
 
     /**
@@ -16,21 +17,35 @@ trait Singleton
         static::$instance = $instance;
     }
 
+    /**
+     * @return static
+     */
     public static function getInstance()
     {
         return static::$instance ?: static::$instance = new static();
     }
 
+    /**
+     * Overridden to prevent instantiation.
+     */
     protected function __construct()
     {
 
     }
 
+    /**
+     * Overridden to prevent cloning.
+     */
     protected function __clone()
     {
 
     }
 
+    /**
+     * Overridden to prevent deserialization.
+     *
+     * @throws Exception
+     */
     protected function __wakeup()
     {
         throw new Exception('Cannot unserialize a singleton.');

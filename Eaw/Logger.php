@@ -2,13 +2,13 @@
 
 namespace Eaw;
 
-use Eaw\Traits\Singleton;
+use Eaw\Traits\IsSingleton;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
 class Logger extends AbstractLogger
 {
-    use Singleton;
+    use IsSingleton;
 
     const ESCAPE = "\033[%sm";
 

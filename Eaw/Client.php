@@ -2,7 +2,9 @@
 
 namespace Eaw;
 
-use Eaw\Traits\Singleton;
+use Eaw\Traits\AuthenticatesClient;
+use Eaw\Traits\MakesCrudRequests;
+use Eaw\Traits\IsSingleton;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Handler\CurlMultiHandler;
@@ -12,7 +14,9 @@ use Psr\Http\Message\ResponseInterface;
 
 class Client
 {
-    use Singleton;
+    use IsSingleton;
+    use MakesCrudRequests;
+    use AuthenticatesClient;
 
     /**
      * @var Guzzle https://docs.guzzlephp.org/en/6.5/
@@ -57,7 +61,7 @@ class Client
      * @param array $options
      * @return array
      */
-    public function setOptions(array $options)
+    public function setOptions(array $options): array
     {
         return $this->options = $options + $this->options;
     }
@@ -83,7 +87,7 @@ class Client
      * @param array|null $parameters
      * @return string
      */
-    protected function buildRequestUrl(string $path = '/', array $parameters = null)
+    protected function buildRequestUrl(string $path = '/', array $parameters = null): string
     {
         $url = $this->baseUrl . $path;
 
@@ -99,7 +103,7 @@ class Client
      * @param array|null $files
      * @return array
      */
-    protected function buildRequestOptions(array $data = null, array $files = null)
+    protected function buildRequestOptions(array $data = null, array $files = null): array
     {
         $options = [
             'headers' => $this->headers,
@@ -189,7 +193,7 @@ class Client
      * @param array $options
      * @return array
      */
-    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = [])
+    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): array
     {
         $options['synchronous'] = true;
 
@@ -205,7 +209,7 @@ class Client
      * @param array $options
      * @return PromiseInterface<array>
      */
-    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = [])
+    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): PromiseInterface
     {
         return $this->guzzle->requestAsync(
                 $method,
@@ -233,158 +237,11 @@ class Client
     }
 
     /**
-     * Crud.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @param array|null $data
-     * @param array $files
-     * @return array
-     */
-    public function create(string $path, array $parameters = null, array $data = null, array $files = null)
-    {
-        return $this->request('POST', $path, $parameters, $data, $files);
-    }
-
-    /**
-     * Crud async.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @param array|null $data
-     * @param array $files
-     * @return PromiseInterface<array>
-     */
-    public function createAsync(string $path, array $parameters = null, array $data = null, array $files = null)
-    {
-        return $this->requestAsync('POST', $path, $parameters, $data, $files);
-    }
-
-    /**
-     * cRud.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @return array
-     */
-    public function read(string $path, array $parameters = null)
-    {
-        return $this->request('GET', $path, $parameters);
-    }
-
-    /**
-     * cRud async.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @return PromiseInterface<array>
-     */
-    public function readAsync(string $path, array $parameters = null)
-    {
-        return $this->requestAsync('GET', $path, $parameters);
-    }
-
-    /**
-     * crUd.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @param array|null $data
-     * @return array
-     */
-    public function update(string $path, array $parameters = null, array $data = null)
-    {
-        return $this->request('PUT', $path, $parameters, $data);
-    }
-
-    /**
-     * crUd async.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @param array|null $data
-     * @return PromiseInterface<array>
-     */
-    public function updateAsync(string $path, array $parameters = null, array $data = null)
-    {
-        return $this->requestAsync('PUT', $path, $parameters, $data);
-    }
-
-    /**
-     * cruD.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @param array|null $data
-     * @return array
-     */
-    public function delete(string $path, array $parameters = null, array $data = null)
-    {
-        return $this->request('DELETE', $path, $parameters, $data);
-    }
-
-    /**
-     * cruD async.
-     *
-     * @param string $path
-     * @param array|null $parameters
-     * @param array|null $data
-     * @return PromiseInterface<array>
-     */
-    public function deleteAsync(string $path, array $parameters = null, array $data = null)
-    {
-        return $this->requestAsync('DELETE', $path, $parameters, $data);
-    }
-
-    /**
-     * @param array $data
-     * @return bool
-     */
-    protected function auth(array $data)
-    {
-        $response = $this->create('/oauth/token', null, $data);
-
-        // TODO: Store token and expires_in somewhere more permanent.
-        $this->headers['Authorization'] = $response['token_type'] . ' ' . $response['access_token'];
-
-        return true;
-    }
-
-    /**
-     * @param int $clientId
-     * @param string $clientSecret
-     * @return bool
-     */
-    public function clientAuth(int $clientId, string $clientSecret)
-    {
-        return $this->auth([
-            'grant_type' => 'client_credentials',
-            'client_id' => $clientId,
-            'client_secret' => $clientSecret,
-        ]);
-    }
-
-    /**
-     * @param string $username
-     * @param string $password
-     * @return bool
-     */
-    public function userAuth(string $username, string $password)
-    {
-        return $this->auth([
-            'grant_type' => 'password',
-            'client_id' => '2', // TODO: Magic number.
-            'username' => $username,
-            'password' => $password,
-        ]);
-    }
-
-    /**
      * @param string $path
      * @param array $parameters
      * @return Paginator
      */
-    public function readPaginated(string $path, array $parameters = [])
+    public function readPaginated(string $path, array $parameters = []): Paginator
     {
         return new Paginator(
             $this,
@@ -397,7 +254,7 @@ class Client
      * @param string $path
      * @return QueryBuilder
      */
-    public function query(string $path)
+    public function query(string $path): QueryBuilder
     {
         return new QueryBuilder($this, $path);
     }
