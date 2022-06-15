@@ -146,20 +146,39 @@ class Client
      */
     protected function isRateLimited(ResponseInterface $response)
     {
-        if ($this->options['catch_rate_limit'] && $response->getStatusCode() == 429) {
-            return $response->getHeader('Retry-After')[0] ?? 10;
+        if (!$this->options['catch_rate_limit']) {
+            return false;
         }
 
-        return false;
+        if ($response->getStatusCode() != 429) {
+            return false;
+        }
+
+        return $response->getHeader('Retry-After')[0] ?? 10;
     }
 
+    /**
+     * @param ResponseInterface $response
+     */
     protected function followUrlHint(ResponseInterface $response)
     {
-        if ($this->options['follow_url_hint'] && $headers = $response->getHeader('X-API-URL')) {
-            logger()->debug('Switching API URL to "' . $headers[0] . '"...');
-
-            $this->baseUrl = $headers[0];
+        if (!$this->options['follow_url_hint']) {
+            return;
         }
+
+        if (!$response->hasHeader('X-API-URL')) {
+            return;
+        }
+
+        $apiUrl = $response->getHeader('X-API-URL')[0];
+
+        if ($this->baseUrl == $apiUrl) {
+            return;
+        }
+
+        logger()->debug('Switching API URL to "' . $apiUrl . '"...');
+
+        $this->baseUrl = $apiUrl;
     }
 
     /**
