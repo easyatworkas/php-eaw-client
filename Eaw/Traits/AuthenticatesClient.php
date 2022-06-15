@@ -3,7 +3,7 @@
 namespace Eaw\Traits;
 
 /**
- * @property $headers Defined in Client.
+ * @property array $headers Defined in Client.
  */
 trait AuthenticatesClient
 {
