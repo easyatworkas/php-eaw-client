@@ -159,26 +159,25 @@ class Client
 
     /**
      * @param ResponseInterface $response
+     * @return false|string
      */
     protected function followUrlHint(ResponseInterface $response)
     {
         if (!$this->options['follow_url_hint']) {
-            return;
+            return false;
         }
 
         if (!$response->hasHeader('X-API-URL')) {
-            return;
+            return false;
         }
 
         $apiUrl = $response->getHeader('X-API-URL')[0];
 
         if ($this->baseUrl == $apiUrl) {
-            return;
+            return false;
         }
 
-        logger()->debug('Switching API URL to "' . $apiUrl . '"...');
-
-        $this->baseUrl = $apiUrl;
+        return $this->baseUrl = $apiUrl;
     }
 
     /**
@@ -214,7 +213,9 @@ class Client
                 $this->buildRequestOptions($data, $files) + $options
             )
             ->then(function (ResponseInterface $response) {
-                $this->followUrlHint($response);
+                if (false !== $newUrl = $this->followUrlHint($response)) {
+                    logger()->debug('Switching API URL to "' . $newUrl . '"...');
+                }
 
                 return json_decode($response->getBody(), true);
             })
