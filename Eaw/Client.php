@@ -163,6 +163,8 @@ class Client
      */
     protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = [])
     {
+        $options['synchronous'] = true;
+
         return $this->requestAsync($method, $path, $parameters, $data, $files, $options)->wait(true);
     }
 
