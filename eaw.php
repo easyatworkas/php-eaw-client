@@ -2,6 +2,7 @@
 
 use Eaw\Models\Model;
 use Eaw\Shell;
+use Eaw\ShellOutput;
 use Psy\Configuration;
 use Psy\VersionUpdater\Checker;
 use Symfony\Component\VarDumper\Caster\Caster;
@@ -22,6 +23,7 @@ require(__DIR__ . '/bootstrap/bootstrap.php');
 })();
 
 $config = new Configuration();
+$config->setOutput(new ShellOutput($config->getOutputVerbosity(), null, null, $config->getPager()));
 $config->setUpdateCheck(Checker::NEVER);
 $config->getPresenter()->addCasters([
     Model::class => function (Model $model) {
