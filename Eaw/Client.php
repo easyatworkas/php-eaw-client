@@ -39,6 +39,7 @@ class Client
      */
     protected $options = [
         'catch_rate_limit' => true,
+        'follow_url_hint' => true,
     ];
 
     protected function __construct()
@@ -152,6 +153,15 @@ class Client
         return false;
     }
 
+    protected function followUrlHint(ResponseInterface $response)
+    {
+        if ($this->options['follow_url_hint'] && $headers = $response->getHeader('X-API-URL')) {
+            logger()->debug('Switching API URL to "' . $headers[0] . '"...');
+
+            $this->baseUrl = $headers[0];
+        }
+    }
+
     /**
      * @param string $method
      * @param string $path
@@ -185,6 +195,8 @@ class Client
                 $this->buildRequestOptions($data, $files) + $options
             )
             ->then(function (ResponseInterface $response) {
+                $this->followUrlHint($response);
+
                 return json_decode($response->getBody(), true);
             })
             ->otherwise(function (ClientException $exception) use ($method, $path, $parameters, $data, $files) {
