@@ -44,10 +44,10 @@ function tabelize(array $data, array $header = [], int $padding = 2)
         $header[$column] = $header[$column] ?? $column;
     }
 
-    // Find widest value for each colum.
+    // Find the widest value for each column.
     $widths = array_reduce(array_merge([ $header ], $data), function (array $carry, array &$row) {
         foreach ($row as $column => $value) {
-            $carry[$column] = max($carry[$column] ?? 0, strlen($value));
+            $carry[$column] = max($carry[$column] ?? 0, mb_strlen($value));
         }
 
         return $carry;
@@ -55,7 +55,7 @@ function tabelize(array $data, array $header = [], int $padding = 2)
 
     // Print header.
     foreach ($columns as $column) {
-        echo str_pad($header[$column] ?? $column, $widths[$column] + $padding, '-');
+        echo mb_str_pad($header[$column] ?? $column, $widths[$column] + $padding, '-');
     }
 
     echo PHP_EOL;
@@ -63,9 +63,50 @@ function tabelize(array $data, array $header = [], int $padding = 2)
     // Print data.
     foreach ($data as $row) {
         foreach ($columns as $column) {
-            echo str_pad($row[$column] ?? '', $widths[$column] + $padding, ' ');
+            echo mb_str_pad($row[$column] ?? '', $widths[$column] + $padding, ' ');
         }
 
         echo PHP_EOL;
     }
+}
+
+// https://stackoverflow.com/a/14773638
+function mb_str_pad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT, $encoding = 'UTF-8')
+{
+    $input_length = mb_strlen($input, $encoding);
+    $pad_string_length = mb_strlen($pad_string, $encoding);
+
+    if ($pad_length <= 0 || ($pad_length - $input_length) <= 0) {
+        return $input;
+    }
+
+    $num_pad_chars = $pad_length - $input_length;
+
+    switch ($pad_type) {
+        case STR_PAD_RIGHT:
+            $left_pad = 0;
+            $right_pad = $num_pad_chars;
+            break;
+
+        case STR_PAD_LEFT:
+            $left_pad = $num_pad_chars;
+            $right_pad = 0;
+            break;
+
+        case STR_PAD_BOTH:
+            $left_pad = floor($num_pad_chars / 2);
+            $right_pad = $num_pad_chars - $left_pad;
+            break;
+    }
+
+    $result = '';
+    for ($i = 0; $i < $left_pad; ++$i) {
+        $result .= mb_substr($pad_string, $i % $pad_string_length, 1, $encoding);
+    }
+    $result .= $input;
+    for ($i = 0; $i < $right_pad; ++$i) {
+        $result .= mb_substr($pad_string, $i % $pad_string_length, 1, $encoding);
+    }
+
+    return $result;
 }
