@@ -74,8 +74,6 @@ trait AuthenticatesClient
 
         $this->saveCredentials();
 
-        $this->headers['Authorization'] = $this->credentials['token_type'] . ' ' . $this->credentials['access_token'];
-
         return true;
     }
 

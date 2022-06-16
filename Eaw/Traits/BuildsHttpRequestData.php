@@ -9,6 +9,11 @@ namespace Eaw\Traits;
 trait BuildsHttpRequestData
 {
     /**
+     * @return bool
+     */
+    abstract function isAuthenticated(): bool;
+
+    /**
      * @param string $path
      * @param array|null $parameters
      * @return string
@@ -35,6 +40,10 @@ trait BuildsHttpRequestData
             'headers' => $this->headers,
             'multipart' => [],
         ];
+
+        if ($this->isAuthenticated()) {
+            $options['headers']['Authorization'] = $this->credentials['token_type'] . ' ' . $this->credentials['access_token'];
+        }
 
         if ($files) {
             if ($data) {
