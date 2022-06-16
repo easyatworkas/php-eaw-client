@@ -8,7 +8,7 @@ namespace Eaw\Traits;
 trait AuthenticatesClient
 {
     /** @var string */
-    protected $credentialsFile = '.auth.json';
+    protected $credentialsFile = EAW_DIR . '/.auth.json';
 
     /** @var array */
     protected $credentials;

@@ -1,9 +1,9 @@
 <?php
 
-require(__DIR__ . '/../vendor/autoload.php');
+require(EAW_DIR . '/vendor/autoload.php');
 
 spl_autoload_register(function ($class) {
-    if (file_exists($file = __DIR__ . '/../' . str_replace('\\', '/', $class) . '.php')) {
+    if (file_exists($file = EAW_DIR . '/' . str_replace('\\', '/', $class) . '.php')) {
         require($file);
     }
 });
