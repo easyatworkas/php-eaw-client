@@ -38,7 +38,9 @@ class Client
     /**
      * @var string[] Headers to include in all requests.
      */
-    protected $headers = [];
+    protected $headers = [
+        'User-Agent' => 'php-eaw-client',
+    ];
 
     /**
      * @var bool[] Client options.
