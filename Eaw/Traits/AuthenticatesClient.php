@@ -7,6 +7,12 @@ namespace Eaw\Traits;
  */
 trait AuthenticatesClient
 {
+    /** @var string */
+    protected $credentialsFile = '.auth.json';
+
+    /** @var array */
+    protected $credentials;
+
     /**
      * @param string $url
      * @param array|null $parameters
@@ -17,15 +23,58 @@ trait AuthenticatesClient
     abstract function create(string $url, array $parameters = null, array $data = null, array $files = null): array;
 
     /**
+     * @return bool
+     */
+    protected function loadCredentials(): bool
+    {
+        if (!file_exists($this->credentialsFile)) {
+            return false;
+        }
+
+        $this->credentials = json_decode(file_get_contents($this->credentialsFile), true);
+
+        return $this->credentials !== null;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function saveCredentials(): bool
+    {
+        if ($this->credentials === null) {
+            return false;
+        }
+
+        return (bool) file_put_contents($this->credentialsFile, json_encode($this->credentials, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAuthenticated(): bool
+    {
+        if ($this->credentials === null) {
+            $this->loadCredentials();
+        }
+
+        return $this->credentials !== null && $this->credentials['expires_at'] > time();
+    }
+
+    /**
      * @param array $data
      * @return bool
      */
     protected function auth(array $data): bool
     {
-        $response = $this->create('/oauth/token', null, $data);
+        logger()->debug('Authenticating...');
 
-        // TODO: Store token and expires_in somewhere more permanent.
-        $this->headers['Authorization'] = $response['token_type'] . ' ' . $response['access_token'];
+        $this->credentials = $this->create('/oauth/token', null, $data);
+
+        $this->credentials['expires_at'] = time() + $this->credentials['expires_in'];
+
+        $this->saveCredentials();
+
+        $this->headers['Authorization'] = $this->credentials['token_type'] . ' ' . $this->credentials['access_token'];
 
         return true;
     }
