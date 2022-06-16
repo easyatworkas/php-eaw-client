@@ -33,6 +33,8 @@ Copy `.env.example` to `.env`, then edit `.env` and add your authentication deta
 
 **Optional:** Add the bin directory to your PATH to invoke `e` from anywhere.
 
+You can also authenticate by running `e userAuth <email> <password>` or `e clientAuth <client ID> <client secret>`. This will override any credentials in env, and store your session in `.auth.json` until it expires.
+
 ## <a name="usage"></a>Usage
 
 ### <a name="usage-shell"></a>As a shell
