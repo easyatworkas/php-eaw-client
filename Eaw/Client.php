@@ -151,7 +151,7 @@ class Client
      * @param array $options
      * @return PromiseInterface<array>
      */
-    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): PromiseInterface
+    protected function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): PromiseInterface
     {
         return $this->guzzle->requestAsync(
                 $method,
