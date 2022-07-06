@@ -165,13 +165,15 @@ class Client
 
                 return json_decode($response->getBody(), true);
             })
-            ->otherwise(function (ClientException $exception) use ($method, $path, $parameters, $data, $files) {
-                if (false !== $retryAfter = $this->isRateLimited($exception->getResponse())) {
-                    if ($retryAfter) {
-                        logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
-                    }
+            ->otherwise(function ($exception) use ($method, $path, $parameters, $data, $files) {
+                if ($exception instanceof ClientException) {
+                    if (false !== $retryAfter = $this->isRateLimited($exception->getResponse())) {
+                        if ($retryAfter) {
+                            logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
+                        }
 
-                    return $this->requestAsync($method, $path, $parameters, $data, $files, [ 'delay' => $retryAfter * 1000 ]);
+                        return $this->requestAsync($method, $path, $parameters, $data, $files, ['delay' => $retryAfter * 1000]);
+                    }
                 }
 
                 throw $exception;
