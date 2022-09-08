@@ -14,6 +14,10 @@ if (DIRECTORY_SEPARATOR == '\\') {
 
 require(__DIR__ . '/bootstrap/bootstrap.php');
 
+if (file_exists($autoexec = '.eaw_autoexec.php')) {
+    require($autoexec);
+}
+
 // TODO: Move this to Psy commands?
 (function () {
     if (method_exists($eaw = eaw(), $command = $_SERVER['argv'][1] ?? null)) {
