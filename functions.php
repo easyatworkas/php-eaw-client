@@ -25,11 +25,11 @@ function eaw()
 }
 
 /**
- * @return \Eaw\Logger
+ * @return \Monolog\Logger
  */
-function logger()
+function logger(string $name = null)
 {
-    return \Eaw\Logger::getInstance();
+    return \Eaw\Logger::getInstance()->getLogger($name);
 }
 
 function tabelize(array $data, array $header = [], int $padding = 2)

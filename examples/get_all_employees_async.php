@@ -1,7 +1,5 @@
 <?php
 
-use Eaw\Logger as L;
-
 $customers = eaw()->readPaginated('/customers');
 
 $allEmployees = [];
@@ -21,7 +19,7 @@ foreach ($customers as $customer) {
                 ];
             }
 
-            logger()->info($customer['name'] . ' ' . logger()->color('OK', L::LIGHT + L::BLUE));
+            logger()->info($customer['name'] . ' OK');
         });
 
     eaw()->tick();

@@ -12,6 +12,7 @@ use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class Client
 {
@@ -50,6 +51,9 @@ class Client
         'follow_url_hint' => true,
     ];
 
+    /** @var LoggerInterface */
+    protected $logger;
+
     protected function __construct()
     {
         $this->handler = new CurlMultiHandler([
@@ -59,6 +63,8 @@ class Client
         $this->guzzle = new Guzzle([
             'handler' => HandlerStack::create($this->handler),
         ]);
+
+        $this->logger = Logger::getInstance()->getLogger('client');
     }
 
     /**
@@ -68,6 +74,14 @@ class Client
     public function setOptions(array $options): array
     {
         return $this->options = $options + $this->options;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    protected function logger(): LoggerInterface
+    {
+        return $this->logger;
     }
 
     /**
@@ -160,7 +174,7 @@ class Client
             )
             ->then(function (ResponseInterface $response) {
                 if (false !== $newUrl = $this->followUrlHint($response)) {
-                    logger()->debug('Switching API URL to "' . $newUrl . '"...');
+                    $this->logger()->debug('Switching API URL to "' . $newUrl . '"...');
                 }
 
                 return json_decode($response->getBody(), true);
@@ -169,7 +183,7 @@ class Client
                 if ($exception instanceof ClientException) {
                     if (false !== $retryAfter = $this->isRateLimited($exception->getResponse())) {
                         if ($retryAfter) {
-                            logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
+                            $this->logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
                         }
 
                         return $this->requestAsync($method, $path, $parameters, $data, $files, ['delay' => $retryAfter * 1000]);

@@ -1,7 +1,5 @@
 <?php
 
-use Eaw\Logger as L;
-
 $from = readline('From date [yyyy-mm-dd]: ');
 $to = readline('To date [yyyy-mm-dd]: ');
 
@@ -31,7 +29,7 @@ foreach ($customers as $customer) {
                 $data[$key][$type] += $entity['length'];
             }
 
-            logger()->info($customer['name'] . ' ' . logger()->color($type, L::LIGHT + L::BLUE));
+            logger()->info($customer['name'] . ' ' . $type);
         };
     };
 

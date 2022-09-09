@@ -154,7 +154,6 @@ $customers = Customer::newQuery()
 
 foreach ($customers as $customer) {
     logger()->info($customer->name);
-    logger()->group();
     logger()->info('Fetching employees...');
 
     $employees = $customer->employees()
@@ -164,8 +163,6 @@ foreach ($customers as $customer) {
         ->getAll();
 
     foreach ($employees as $employee) {
-        logger()->info('.', [ 'timestamp' => false, 'indent' => false, 'eol' => false ]); // "Progress bar".
-
         $table[] = [
             'cust_number' => $customer->number,
             'cust_name' => $customer->name,
@@ -177,9 +174,6 @@ foreach ($customers as $customer) {
             'to' => $employee->to,
         ];
     }
-
-    logger()->info('', [ 'timestamp' => false ]); // Newline after progress bar.
-    logger()->ungroup();
 }
 
 logger()->info('Done.');

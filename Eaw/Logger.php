@@ -3,10 +3,12 @@
 namespace Eaw;
 
 use Eaw\Traits\IsSingleton;
-use Psr\Log\AbstractLogger;
-use Psr\Log\LogLevel;
+use Monolog\Formatter\FormatterInterface;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger as Monolog;
+use Psr\Log\LoggerInterface;
 
-class Logger extends AbstractLogger
+class Logger implements FormatterInterface
 {
     use IsSingleton;
 
@@ -24,75 +26,128 @@ class Logger extends AbstractLogger
     const CYAN = 6;
     const GRAY = 7;
 
-    const DEFAULT = 39;
+    const RESET = 39;
 
-    /** @var callable */
-    protected $formatter;
+    /** @var string */
+    protected $defaultName = 'default';
 
-    protected $indentLevel = 0;
+    /** @var Monolog[] */
+    protected $loggers = [];
 
-    public function setFormatter(callable $formatter)
+    /**
+     * @return Monolog
+     */
+    protected function getDefaultLogger()
     {
-        $this->formatter = $formatter;
-    }
+        if (!array_key_exists($this->defaultName, $this->loggers)) {
+            $logger = new Monolog($this->defaultName);
 
-    public function group()
-    {
-        $this->indentLevel++;
-    }
+            $handler = new StreamHandler('php://stdout');
+            $handler->setFormatter($this);
+            $logger->pushHandler($handler);
 
-    public function ungroup()
-    {
-        $this->indentLevel--;
-    }
-
-    public function color(string $string, int $color)
-    {
-        return sprintf(static::ESCAPE, $color) . $string . sprintf(static::ESCAPE, static::DEFAULT);
-    }
-
-    protected function format(self $self, string $level, string $message, array $context)
-    {
-        if ($context['indent'] ?? false) {
-            $message = str_repeat('  ', $context['indent']) . $message;
+            $this->loggers[$this->defaultName] = $logger;
         }
 
-        if ($context['color']) {
-            $message = $this->color($message, $context['color']);
-        }
-
-        if ($context['timestamp'] ?? true) {
-            $message = $this->color('[' . date('Y-m-d H:i:s') . ']', static::DARK + static::YELLOW) . ' ' . $message;
-        }
-
-        if ($context['eol'] ?? true) {
-            $message .= PHP_EOL;
-        }
-
-        return $message;
+        return $this->loggers[$this->defaultName];
     }
 
     /**
-     * @param mixed $level
-     * @param string $message
-     * @param array{indent?: int, color?: int, timestamp?: bool, eol?: bool} $context
+     * @param string|null $name
+     * @return LoggerInterface
      */
-    public function log($level, $message, array $context = [])
+    public function getLogger(string $name = null)
     {
-        $context['color'] = $context['color'] ?? (function ($level) {
-            switch ($level) {
-                case LogLevel::INFO: return static::DARK + static::GREEN;
-                case LogLevel::NOTICE: return static::DARK + static::YELLOW;
-                case LogLevel::ERROR: return static::DARK + static::RED;
-            }
-        })($level);
+        if ($name === null) {
+            return $this->getDefaultLogger();
+        }
 
-        $context['indent'] = $context['indent'] ?? $this->indentLevel;
+        if (!array_key_exists($name, $this->loggers)) {
+            $this->loggers[$name] = $this->getDefaultLogger()->withName($name);
+        }
 
-        $context['formatter'] = $context['formatter'] ?? $this->formatter ?? [ $this, 'format' ];
+        return $this->loggers[$name];
+    }
 
-        $message = call_user_func_array($context['formatter'], [ $this, $level, $message, $context ]);
+    /**
+     * message
+     * level
+     * context
+     * channel
+     * datetime
+     * extra
+     *
+     * @param array $record
+     * @return string
+     */
+    public function format(array $record)
+    {
+        $record['message'] = '{dyellow}[{datetime}]{reset} {lblack}{channel}.{reset}{level}: ' . $record['message'];
 
-        fwrite(STDERR, $message);
+        $level = Monolog::getLevelName($record['level']);
+        switch ($level) {
+            case 'DEBUG':
+            case 'INFO':
+                $level = sprintf(static::ESCAPE, static::LIGHT + static::GRAY) . $level . sprintf(static::ESCAPE, static::RESET);
+                break;
+
+            case 'NOTICE':
+            case 'WARNING':
+                $level = sprintf(static::ESCAPE, static::LIGHT + static::YELLOW) . $level . sprintf(static::ESCAPE, static::RESET);
+                break;
+
+            case 'ERROR':
+            case 'CRITICAL':
+            case 'ALERT':
+            case 'EMERGENCY':
+                $level = sprintf(static::ESCAPE, static::LIGHT + static::RED) . $level . sprintf(static::ESCAPE, static::RESET);
+                break;
+        }
+
+        // TODO: Move colors to a reusable attribute.
+        $record['context'] = array_merge([
+            'datetime' => $record['datetime']->format('Y-m-d H:i:s'),
+            'channel' => $record['channel'],
+            'level' => $level,
+
+            'lblack' => sprintf(static::ESCAPE, static::LIGHT + static::BLACK),
+            'lred' => sprintf(static::ESCAPE, static::LIGHT + static::RED),
+            'lgreen' => sprintf(static::ESCAPE, static::LIGHT + static::GREEN),
+            'lyellow' => sprintf(static::ESCAPE, static::LIGHT + static::YELLOW),
+            'lblue' => sprintf(static::ESCAPE, static::LIGHT + static::BLUE),
+            'lmagenta' => sprintf(static::ESCAPE, static::LIGHT + static::MAGENTA),
+            'lcyan' => sprintf(static::ESCAPE, static::LIGHT + static::CYAN),
+            'lgray' => sprintf(static::ESCAPE, static::LIGHT + static::GRAY),
+
+            'dblack' => sprintf(static::ESCAPE, static::DARK + static::BLACK),
+            'dred' => sprintf(static::ESCAPE, static::DARK + static::RED),
+            'dgreen' => sprintf(static::ESCAPE, static::DARK + static::GREEN),
+            'dyellow' => sprintf(static::ESCAPE, static::DARK + static::YELLOW),
+            'dblue' => sprintf(static::ESCAPE, static::DARK + static::BLUE),
+            'dmagenta' => sprintf(static::ESCAPE, static::DARK + static::MAGENTA),
+            'dcyan' => sprintf(static::ESCAPE, static::DARK + static::CYAN),
+            'dgray' => sprintf(static::ESCAPE, static::DARK + static::GRAY),
+
+            'reset' => sprintf(static::ESCAPE, static::RESET),
+        ], $record['context']);
+
+        return str_replace(
+            array_map(function (string $key) {
+                return "{{$key}}";
+            }, array_keys($record['context'])),
+            $record['context'],
+            $record['message']
+        ) . PHP_EOL;
+    }
+
+    /**
+     * @param array $records
+     * @return array
+     */
+    public function formatBatch(array $records)
+    {
+        return array_map(function ($record) {
+            return $this->format($record);
+        }, $records);
     }
 }
