@@ -128,14 +128,20 @@ foreach ($employees as $employee) {
 ```
 
 #### <a name="examples-logging"></a>Logging
-```php
-// Basic log levels.
-logger()->info('Things are happening...');
-logger()->notice('You should probably be aware...');
-logger()->error('Things did not go well :(');
 
-// Disabling the built-in formatter and/or EOL.
-logger()->info('Hello, World!', [ 'formatter' => false, 'eol' => false ]);
+This project comes with [Monolog](https://github.com/Seldaek/monolog), and has a simple helper function to access and create new instances. New instances will be cloned from the default one, so any configuration changes you make to the default instance will be inherited by subsequent new ones.
+
+```php
+logger()->info('This is a message from the default logger.');
+
+$myLogger = logger('awesomeness');
+$myLogger->info('This is a message from my customer logger.');
+```
+
+Log messages support variables and colors.
+
+```php
+logger()->info('Found {lgreen}{num}{reset} employees.', [ 'num' => 1234 ]);
 ```
 
 #### <a name="examples-empexport"></a>Bringing it all together
