@@ -29,6 +29,7 @@ if (file_exists($autoexec = '.eaw_autoexec.php')) {
 $config = new Configuration();
 $config->setOutput(new ShellOutput($config->getOutputVerbosity(), null, null, $config->getPager()));
 $config->setUpdateCheck(Checker::NEVER);
+$config->setColorMode($config->outputIsPiped() ? Configuration::COLOR_MODE_AUTO : Configuration::COLOR_MODE_FORCED);
 $config->getPresenter()->addCasters([
     Model::class => function (Model $model) {
         $result = [];
