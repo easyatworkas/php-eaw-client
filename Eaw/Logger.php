@@ -31,6 +31,8 @@ class Logger implements FormatterInterface
     /** @var string */
     protected $defaultName = 'default';
 
+    protected $defaultFormat = '{dyellow}[{datetime}]{reset} {lblack}{channel}.{reset}{level}: {message}{eol}';
+
     /** @var Monolog[] */
     protected $loggers = [];
 
@@ -82,8 +84,6 @@ class Logger implements FormatterInterface
      */
     public function format(array $record)
     {
-        $record['message'] = '{dyellow}[{datetime}]{reset} {lblack}{channel}.{reset}{level}: ' . $record['message'];
-
         $level = Monolog::getLevelName($record['level']);
         switch ($level) {
             case 'DEBUG':
@@ -109,6 +109,9 @@ class Logger implements FormatterInterface
             'datetime' => $record['datetime']->format('Y-m-d H:i:s'),
             'channel' => $record['channel'],
             'level' => $level,
+            'message' => $record['message'],
+
+            'eol' => PHP_EOL,
 
             'lblack' => sprintf(static::ESCAPE, static::LIGHT + static::BLACK),
             'lred' => sprintf(static::ESCAPE, static::LIGHT + static::RED),
@@ -136,8 +139,8 @@ class Logger implements FormatterInterface
                 return "{{$key}}";
             }, array_keys($record['context'])),
             $record['context'],
-            $record['message']
-        ) . PHP_EOL;
+            $record['extra']['format'] ?? $this->defaultFormat
+        );
     }
 
     /**
