@@ -3,6 +3,7 @@
 namespace Eaw;
 
 use Eaw\Traits\IsSingleton;
+use Exception;
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger as Monolog;
@@ -38,13 +39,14 @@ class Logger implements FormatterInterface
 
     /**
      * @return Monolog
+     * @throws Exception
      */
     protected function getDefaultLogger()
     {
         if (!array_key_exists($this->defaultName, $this->loggers)) {
             $logger = new Monolog($this->defaultName);
 
-            $handler = new StreamHandler('php://stdout');
+            $handler = new StreamHandler('php://stdout', env('LOG_LEVEL', 'DEBUG'));
             $handler->setFormatter($this);
             $logger->pushHandler($handler);
 
@@ -57,6 +59,7 @@ class Logger implements FormatterInterface
     /**
      * @param string|null $name
      * @return LoggerInterface
+     * @throws Exception
      */
     public function getLogger(string $name = null)
     {

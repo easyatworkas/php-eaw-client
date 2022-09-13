@@ -3,7 +3,7 @@
 /**
  * @return mixed
  */
-function env(string $variable)
+function env(string $variable, string $default = null)
 {
     static $dotenv;
 
@@ -13,7 +13,7 @@ function env(string $variable)
         $dotenv->safeLoad();
     }
 
-    return $_ENV[strtoupper($variable)] ?? null;
+    return $_ENV[strtoupper($variable)] ?? $default;
 }
 
 /**
