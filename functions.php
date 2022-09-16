@@ -8,7 +8,7 @@ function env(string $variable, string $default = null)
     static $dotenv;
 
     if (!$dotenv) {
-        $dotenv = \Dotenv\Dotenv::createMutable(__DIR__);
+        $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__);
 
         $dotenv->safeLoad();
     }
