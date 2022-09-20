@@ -13,7 +13,9 @@ function env(string $variable, string $default = null)
         $dotenv->safeLoad();
     }
 
-    return getenv(strtoupper($variable)) ?? $default;
+    $value = getenv(strtoupper($variable));
+
+    return $value === false ? $default : $value;
 }
 
 /**
