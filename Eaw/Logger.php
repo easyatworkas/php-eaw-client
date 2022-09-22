@@ -46,7 +46,7 @@ class Logger implements FormatterInterface
         if (!array_key_exists($this->defaultName, $this->loggers)) {
             $logger = new Monolog($this->defaultName);
 
-            $handler = new StreamHandler('php://stdout', env('LOG_LEVEL', 'DEBUG'));
+            $handler = new StreamHandler('php://stdout', env('eaw_log_level', 'DEBUG'));
             $handler->setFormatter($this);
             $logger->pushHandler($handler);
 

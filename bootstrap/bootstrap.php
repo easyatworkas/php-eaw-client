@@ -13,11 +13,11 @@ require(EAW_DIR . '/functions.php');
         return true;
     }
 
-    if ((null !== $username = env('username')) && (null !== $password = env('password'))) {
+    if ((null !== $username = env('eaw_username')) && (null !== $password = env('eaw_password'))) {
         return eaw()->userAuth($username, $password);
     }
 
-    if ((null !== $clientId = env('client_id')) && (null !== $clientSecret = env('client_secret'))) {
+    if ((null !== $clientId = env('eaw_client_id')) && (null !== $clientSecret = env('eaw_client_secret'))) {
         return eaw()->clientAuth($clientId, $clientSecret);
     }
 
