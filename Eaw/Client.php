@@ -6,6 +6,7 @@ use Eaw\Traits\AuthenticatesClient;
 use Eaw\Traits\BuildsHttpRequestData;
 use Eaw\Traits\MakesCrudRequests;
 use Eaw\Traits\IsSingleton;
+use Exception;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Handler\CurlMultiHandler;
@@ -177,13 +178,17 @@ class Client
                     $this->logger()->debug('Switching API URL to "' . $newUrl . '"...');
                 }
 
-                $body = (string) $response->getBody();
+                $body = json_decode($response->getBody(), true);
 
-                if ($body === '') {
-                    return [];
+                if ($body === null) {
+                    throw new Exception(json_last_error_msg());
                 }
 
-                return json_decode($body, true);
+                if ($body === '') {
+                    $body = [];
+                }
+
+                return $body;
             })
             ->otherwise(function ($exception) use ($method, $path, $parameters, $data, $files) {
                 if ($exception instanceof ClientException) {
