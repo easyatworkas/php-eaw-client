@@ -178,17 +178,23 @@ class Client
                     $this->logger()->debug('Switching API URL to "' . $newUrl . '"...');
                 }
 
-                $body = json_decode($response->getBody(), true);
+                $encoded = (string) $response->getBody();
 
-                if ($body === null) {
+                if ($encoded === '') {
+                    $encoded = json_encode($encoded);
+                }
+
+                $decoded = json_decode($encoded, true);
+
+                if ($decoded === null) {
                     throw new Exception(json_last_error_msg());
                 }
 
-                if ($body === '') {
-                    $body = [];
+                if ($decoded === '') {
+                    $decoded = [];
                 }
 
-                return $body;
+                return $decoded;
             })
             ->otherwise(function ($exception) use ($method, $path, $parameters, $data, $files) {
                 if ($exception instanceof ClientException) {
