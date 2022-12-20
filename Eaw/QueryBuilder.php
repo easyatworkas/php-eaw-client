@@ -90,6 +90,9 @@ class QueryBuilder
             });
         }
 
+        // Reset the query
+        $this->query = [];
+        
         return $iterator;
     }
 
