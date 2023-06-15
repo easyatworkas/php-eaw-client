@@ -233,4 +233,13 @@ class Client
     {
         return new QueryBuilder($this, $path);
     }
+
+    /**
+     * @param string $path
+     * @return QueryBuilderImmutable
+     */
+    public function queryImmutable(string $path)
+    {
+        return new QueryBuilderImmutable($this->query($path));
+    }
 }
