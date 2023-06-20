@@ -55,7 +55,7 @@ trait HasAttributes
         $keys = array_unique(array_merge(array_keys($this->original), array_keys($this->attributes)));
 
         foreach ($keys as $key) {
-            if ($this->getOriginal($key) != $this->getAttribute($key)) {
+            if ($this->getOriginal($key) !== $this->getAttribute($key) && !$this->originalIsNumericallyEquivalent($key)) {
                 $dirty[$key] = $this->getAttribute($key);
             }
         }
@@ -66,6 +66,14 @@ trait HasAttributes
     public function isDirty()
     {
         return (bool) $this->getDirty();
+    }
+
+    public function originalIsNumericallyEquivalent($key)
+    {
+        $original = $this->getOriginal($key);
+        $current = $this->getAttribute($key);
+
+        return is_numeric($original) && is_numeric($current) && strcmp((string) $original, (string) $current) === 0;
     }
 
     // Laravel-like
