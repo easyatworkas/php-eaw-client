@@ -46,9 +46,45 @@ class Logger implements FormatterInterface
         if (!array_key_exists($this->defaultName, $this->loggers)) {
             $logger = new Monolog($this->defaultName);
 
-            $handler = new StreamHandler('php://stdout', env('eaw_log_level', 'DEBUG'));
-            $handler->setFormatter($this);
-            $logger->pushHandler($handler);
+            $consoleLogLevel = env('eaw_log_level', 'DEBUG');
+            $consoleHandler = new StreamHandler('php://stdout', $consoleLogLevel);
+            $consoleHandler->setFormatter($this);
+            $logger->pushHandler($consoleHandler);
+
+            // If a log file is specified, add a file handler that strips out color codes.
+            if (null !== $logFile = env('eaw_log_file_path')) {
+                $fileLogLevel = env('eaw_log_file_level', $consoleLogLevel);
+                $fileHandler = new StreamHandler($logFile, $fileLogLevel);
+                $fileHandler->setFormatter($this);
+                $fileHandler->pushProcessor(function ($record) {
+                    $record['context'] += [
+                        'level' => Monolog::getLevelName($record['level']),
+
+                        'lblack' => '',
+                        'lred' => '',
+                        'lgreen' => '',
+                        'lyellow' => '',
+                        'lblue' => '',
+                        'lmagenta' => '',
+                        'lcyan' => '',
+                        'lgray' => '',
+
+                        'dblack' => '',
+                        'dred' => '',
+                        'dgreen' => '',
+                        'dyellow' => '',
+                        'dblue' => '',
+                        'dmagenta' => '',
+                        'dcyan' => '',
+                        'dgray' => '',
+
+                        'reset' => '',
+                    ];
+
+                    return $record;
+                });
+                $logger->pushHandler($fileHandler);
+            }
 
             $this->loggers[$this->defaultName] = $logger;
         }
