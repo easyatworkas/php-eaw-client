@@ -16,7 +16,7 @@
 
 ## <a name="requirements"></a>Requirements
 
- * PHP 7.0+
+ * PHP 7.4+
  * Composer
 
 ## <a name="installation"></a>Installation
