@@ -51,8 +51,8 @@ trait DownloadsFiles
                 $path = tempnam(sys_get_temp_dir(), 'eaw');
                 $fh = fopen($path, 'w');
 
-                while (!$stream->eof()) {
-                    fwrite($fh, $stream->read(1024));
+                while ('' !== $data = $stream->read(1024)) {
+                    fwrite($fh, $data);
                 }
 
                 fclose($fh);
