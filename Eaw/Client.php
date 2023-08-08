@@ -4,6 +4,7 @@ namespace Eaw;
 
 use Eaw\Traits\AuthenticatesClient;
 use Eaw\Traits\BuildsHttpRequestData;
+use Eaw\Traits\DownloadsFiles;
 use Eaw\Traits\MakesCrudRequests;
 use Eaw\Traits\IsSingleton;
 use Exception;
@@ -12,7 +13,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\PromiseInterface;
-use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Psr\Log\LoggerInterface;
 
 class Client
@@ -21,6 +22,7 @@ class Client
     use BuildsHttpRequestData;
     use MakesCrudRequests;
     use AuthenticatesClient;
+    use DownloadsFiles;
 
     /**
      * @var Guzzle https://docs.guzzlephp.org/en/6.5/
@@ -102,10 +104,10 @@ class Client
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param GuzzleResponse $response
      * @return false|int
      */
-    protected function isRateLimited(ResponseInterface $response)
+    protected function isRateLimited(GuzzleResponse $response)
     {
         if (!$this->options['catch_rate_limit']) {
             return false;
@@ -119,10 +121,10 @@ class Client
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param GuzzleResponse $response
      * @return false|string
      */
-    protected function followUrlHint(ResponseInterface $response)
+    protected function followUrlHint(GuzzleResponse $response)
     {
         if (!$this->options['follow_url_hint']) {
             return false;
@@ -148,9 +150,9 @@ class Client
      * @param array|null $data
      * @param array|null $files
      * @param array $options
-     * @return array
+     * @return Response|array The decoded JSON, or a Response if $options['raw'] is truthy.
      */
-    protected function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): array
+    public function request(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = [])
     {
         $options['synchronous'] = true;
 
@@ -164,18 +166,22 @@ class Client
      * @param array|null $data
      * @param array|null $files
      * @param array $options
-     * @return PromiseInterface<array>
+     * @return PromiseInterface<Response|array> Promise that resolves to the decoded JSON, or a Response if $options['raw'] is truthy.
      */
-    protected function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): PromiseInterface
+    public function requestAsync(string $method = 'GET', string $path = '/', array $parameters = null, array $data = null, array $files = null, array $options = []): PromiseInterface
     {
         return $this->guzzle->requestAsync(
                 $method,
                 $this->buildRequestUrl($path, $parameters),
                 $this->buildRequestOptions($data, $files) + $options
             )
-            ->then(function (ResponseInterface $response) {
+            ->then(function (GuzzleResponse $response) use ($options) {
                 if (false !== $newUrl = $this->followUrlHint($response)) {
                     $this->logger()->debug('Switching API URL to "' . $newUrl . '"...');
+                }
+
+                if ($options['raw'] ?? false) {
+                    return new Response($response);
                 }
 
                 $encoded = (string) $response->getBody();

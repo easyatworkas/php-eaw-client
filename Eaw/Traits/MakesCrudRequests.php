@@ -2,6 +2,7 @@
 
 namespace Eaw\Traits;
 
+use Eaw\Response;
 use GuzzleHttp\Promise\PromiseInterface;
 
 trait MakesCrudRequests
@@ -13,9 +14,9 @@ trait MakesCrudRequests
      * @param array|null $data
      * @param array|null $files
      * @param array $options
-     * @return array
+     * @return Response|array
      */
-    abstract function request(string $method, string $path, array $parameters = null, array $data = null, array $files = null, array $options = []): array;
+    abstract function request(string $method, string $path, array $parameters = null, array $data = null, array $files = null, array $options = []);
 
     /**
      * @param string $method
@@ -24,7 +25,7 @@ trait MakesCrudRequests
      * @param array|null $data
      * @param array|null $files
      * @param array $options
-     * @return PromiseInterface<array>
+     * @return PromiseInterface<Response|array>
      */
     abstract function requestAsync(string $method, string $path, array $parameters = null, array $data = null, array $files = null, array $options = []): PromiseInterface;
 
