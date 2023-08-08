@@ -2,6 +2,7 @@
 
 namespace Eaw\Traits;
 
+use Eaw\MimeDetector;
 use Eaw\Response;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -46,9 +47,9 @@ trait DownloadsFiles
     {
         return $this->requestAsync($method, $path, $parameters, $data, $files, $options + [ 'raw' => true ])
             ->then(function (Response $response) {
-                $stream = $response->getStream();
+                $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('eaw-');
 
-                $path = tempnam(sys_get_temp_dir(), 'eaw');
+                $stream = $response->getStream();
                 $fh = fopen($path, 'w');
 
                 while ('' !== $data = $stream->read(1024)) {
@@ -56,6 +57,10 @@ trait DownloadsFiles
                 }
 
                 fclose($fh);
+
+                if (null !== $extension = MimeDetector::getFileExtension($path)) {
+                    rename($path, $path .= '.' . $extension);
+                }
 
                 return $path;
             });

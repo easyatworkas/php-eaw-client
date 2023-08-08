@@ -4,7 +4,8 @@
         "ext-json": "*",
         "vlucas/phpdotenv": "^4.2",
         "peridot-php/peridot": "^1.19",
-        "monolog/monolog": "^1.27"
+        "monolog/monolog": "^1.27",
+        "league/mime-type-detection": "^1.13"
     },
     "require-dev": {
         "psy/psysh": "@stable",
