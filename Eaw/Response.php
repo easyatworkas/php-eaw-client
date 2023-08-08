@@ -7,11 +7,37 @@ use Psr\Http\Message\StreamInterface;
 
 class Response
 {
-    protected $response;
+    protected GuzzleResponse $response;
 
     public function __construct(GuzzleResponse $response)
     {
         $this->response = $response;
+    }
+
+    /**
+     * @param string $header
+     * @return bool
+     */
+    public function hasHeader(string $header): bool
+    {
+        return $this->response->hasHeader($header);
+    }
+
+    /**
+     * @param string $header
+     * @return string[]
+     */
+    public function getHeader(string $header): array
+    {
+        return $this->response->getHeader($header);
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->response->getHeaders();
     }
 
     /**
