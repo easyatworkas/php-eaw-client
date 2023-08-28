@@ -2,6 +2,14 @@
 
 namespace Eaw\Traits;
 
+use ArrayAccess;
+use JsonSerializable;
+use ReturnTypeWillChange;
+
+/**
+ * @implements ArrayAccess
+ * @implements JsonSerializable
+ */
 trait HasAttributes
 {
     protected $attributes;
@@ -116,28 +124,30 @@ trait HasAttributes
 
     // ArrayAccess
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return $this->hasAttribute($offset);
     }
 
+    #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->getAttribute($offset);
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->setAttribute($offset, $value);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $this->unsetAttribute($offset);
     }
 
     // JsonSerializable
 
+    #[ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->getAttributes();
