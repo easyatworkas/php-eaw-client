@@ -3,7 +3,6 @@
 namespace Eaw\Traits;
 
 /**
- * @property string $baseUrl Defined in Client.
  * @property array $headers Defined in Client.
  */
 trait BuildsHttpRequestData
@@ -20,7 +19,7 @@ trait BuildsHttpRequestData
      */
     protected function buildRequestUrl(string $path = '/', array $parameters = null): string
     {
-        $url = $this->baseUrl . $path;
+        $url = $this->getBaseUrl() . $path;
 
         if ($parameters) {
             $url .= '?' . http_build_query($parameters);

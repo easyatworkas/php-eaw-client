@@ -71,6 +71,25 @@ class Client
     }
 
     /**
+     * @param string $url
+     * @return bool
+     */
+    public function setBaseUrl(string $url): bool
+    {
+        $this->baseUrl = $url;
+
+        return true;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
+    }
+
+    /**
      * @param array $options
      * @return array
      */
@@ -122,7 +141,7 @@ class Client
 
     /**
      * @param GuzzleResponse $response
-     * @return false|string
+     * @return bool
      */
     protected function followUrlHint(GuzzleResponse $response)
     {
@@ -136,11 +155,11 @@ class Client
 
         $apiUrl = $response->getHeader('X-API-URL')[0];
 
-        if ($this->baseUrl == $apiUrl) {
+        if ($this->getBaseUrl() == $apiUrl) {
             return false;
         }
 
-        return $this->baseUrl = $apiUrl;
+        return $this->setBaseUrl($apiUrl);
     }
 
     /**
@@ -176,8 +195,8 @@ class Client
                 $this->buildRequestOptions($data, $files) + $options
             )
             ->then(function (GuzzleResponse $response) use ($options) {
-                if (false !== $newUrl = $this->followUrlHint($response)) {
-                    $this->logger()->debug('Switching API URL to "' . $newUrl . '"...');
+                if ($this->followUrlHint($response)) {
+                    $this->logger()->debug('Switching API URL to "' . $this->getBaseUrl() . '"...');
                 }
 
                 if ($options['raw'] ?? false) {
