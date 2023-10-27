@@ -72,10 +72,19 @@ class Client
 
     /**
      * @param string $url
+     * @param bool $force Bypass sanity checking.
      * @return bool
      */
-    public function setBaseUrl(string $url): bool
+    public function setBaseUrl(string $url, bool $force = false): bool
     {
+        if (!preg_match('/^https:\/\/.+\.(?:eatw.io|easyatwork.com)\/?$/i', $url)) {
+            if ($force) {
+                $this->logger()->warning('Bypassing sanity check for API URL! Do NOT do this unless you are ABSOLUTELY SURE you know what you are doing!');
+            } else {
+                return false;
+            }
+        }
+
         $this->baseUrl = $url;
 
         return true;
