@@ -27,6 +27,8 @@ trait AuthenticatesClient
      */
     protected function loadCredentials(): bool
     {
+        $this->credentials = null;
+
         if (!file_exists($this->credentialsFile)) {
             return false;
         }
@@ -104,5 +106,29 @@ trait AuthenticatesClient
             'username' => $username,
             'password' => $password,
         ]);
+    }
+
+    /**
+     * @param string $path
+     * @param callable $callback
+     * @return mixed
+     */
+    public function withCredentials(string $path, callable $callback)
+    {
+        $originalFile = $this->credentialsFile;
+
+        $this->credentialsFile = $path;
+
+        $this->loadCredentials();
+
+        try {
+            $return = $callback();
+        } finally {
+            $this->credentialsFile = $originalFile;
+
+            $this->loadCredentials();
+        }
+
+        return $return;
     }
 }
