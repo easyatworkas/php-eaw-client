@@ -2,14 +2,14 @@
 
 namespace Eaw;
 
+use Eaw\Exceptions\ResponseException;
 use Eaw\Traits\AuthenticatesClient;
 use Eaw\Traits\BuildsHttpRequestData;
 use Eaw\Traits\DownloadsFiles;
 use Eaw\Traits\MakesCrudRequests;
 use Eaw\Traits\IsSingleton;
-use Exception;
 use GuzzleHttp\Client as Guzzle;
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -132,10 +132,10 @@ class Client
     }
 
     /**
-     * @param GuzzleResponse $response
+     * @param Response $response
      * @return false|int
      */
-    protected function isRateLimited(GuzzleResponse $response)
+    protected function isRateLimited(Response $response)
     {
         if (!$this->options['catch_rate_limit']) {
             return false;
@@ -149,10 +149,10 @@ class Client
     }
 
     /**
-     * @param GuzzleResponse $response
+     * @param Response $response
      * @return bool
      */
-    protected function followUrlHint(GuzzleResponse $response)
+    protected function followUrlHint(Response $response)
     {
         if (!$this->options['follow_url_hint']) {
             return false;
@@ -203,42 +203,32 @@ class Client
                 $this->buildRequestUrl($path, $parameters),
                 $this->buildRequestOptions($data, $files) + $options
             )
-            ->then(function (GuzzleResponse $response) use ($options) {
+            ->then(function (GuzzleResponse $guzzleResponse) use ($options) {
+                $response = new Response($guzzleResponse);
+
                 if ($this->followUrlHint($response)) {
                     $this->logger()->debug('Switching API URL to "' . $this->getBaseUrl() . '"...');
                 }
 
                 if ($options['raw'] ?? false) {
-                    return new Response($response);
+                    return $response;
                 }
 
-                $encoded = (string) $response->getBody();
-
-                if ($encoded === '') {
-                    $encoded = json_encode($encoded);
-                }
-
-                $decoded = json_decode($encoded, true);
-
-                if ($decoded === null) {
-                    throw new Exception(json_last_error_msg());
-                }
-
-                if ($decoded === '') {
-                    $decoded = [];
-                }
-
-                return $decoded;
+                return $response->decodeJson();
             })
             ->otherwise(function ($exception) use ($method, $path, $parameters, $data, $files) {
-                if ($exception instanceof ClientException) {
-                    if (false !== $retryAfter = $this->isRateLimited($exception->getResponse())) {
+                if ($exception instanceof RequestException) {
+                    $response = new Response($exception->getResponse());
+
+                    if (false !== $retryAfter = $this->isRateLimited($response)) {
                         if ($retryAfter) {
                             $this->logger()->notice('Rate limit reached. Retrying in ' . $retryAfter . ' seconds...');
                         }
 
-                        return $this->requestAsync($method, $path, $parameters, $data, $files, ['delay' => $retryAfter * 1000]);
+                        return $this->requestAsync($method, $path, $parameters, $data, $files, [ 'delay' => $retryAfter * 1000 ]);
                     }
+
+                    throw new ResponseException($response, $exception);
                 }
 
                 throw $exception;

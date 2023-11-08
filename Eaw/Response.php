@@ -2,6 +2,7 @@
 
 namespace Eaw;
 
+use Exception;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Psr\Http\Message\StreamInterface;
 
@@ -12,6 +13,22 @@ class Response
     public function __construct(GuzzleResponse $response)
     {
         $this->response = $response;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatusCode(): int
+    {
+        return $this->response->getStatusCode();
+    }
+
+    /**
+     * @return string
+     */
+    public function getReasonPhrase(): string
+    {
+        return $this->response->getReasonPhrase();
     }
 
     /**
@@ -46,6 +63,31 @@ class Response
     public function getStream(): StreamInterface
     {
         return $this->response->getBody();
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     */
+    public function decodeJson()
+    {
+        $encoded = (string) $this->getStream();
+
+        if ($encoded === '') {
+            $encoded = json_encode($encoded);
+        }
+
+        $decoded = json_decode($encoded, true);
+
+        if ($decoded === null) {
+            throw new Exception(json_last_error_msg());
+        }
+
+        if ($decoded === '') {
+            $decoded = [];
+        }
+
+        return $decoded;
     }
 
     public function __toString()
