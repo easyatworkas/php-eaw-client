@@ -135,7 +135,7 @@ This project comes with [Monolog](https://github.com/Seldaek/monolog), and has a
 logger()->info('This is a message from the default logger.');
 
 $myLogger = logger('awesomeness');
-$myLogger->info('This is a message from my customer logger.');
+$myLogger->info('This is a message from my custom logger.');
 ```
 
 Log messages support variables and colors.
