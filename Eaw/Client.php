@@ -217,7 +217,7 @@ class Client
                 return $response->decodeJson();
             })
             ->otherwise(function ($exception) use ($method, $path, $parameters, $data, $files) {
-                if ($exception instanceof RequestException) {
+                if ($exception instanceof RequestException && $exception->hasResponse()) {
                     $response = new Response($exception->getResponse());
 
                     if (false !== $retryAfter = $this->isRateLimited($response)) {
