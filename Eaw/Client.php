@@ -266,4 +266,12 @@ class Client
     {
         return new QueryBuilderImmutable($this->query($path));
     }
+
+    /**
+     * @return string|null
+     */
+    public function apiVersion()
+    {
+        return $this->request('get', '/status', null, null, null, [ 'raw' => true ])->getHeader('X-Version')[0] ?? null;
+    }
 }
