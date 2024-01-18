@@ -34,6 +34,53 @@ function logger(string $name = null)
     return \Eaw\Logger::getInstance()->getLogger($name);
 }
 
+/**
+ * An attempt at secret inputs using ANSI hackery.
+ *
+ * Needs improvement.
+ *
+ * @param string|null $prompt
+ * @return false|string
+ */
+function readline_secret(string $prompt = null)
+{
+    $oldFormat = \Eaw\Logger::getInstance()->getDefaultFormat();
+    \Eaw\Logger::getInstance()->setDefaultFormat('{message}');
+
+    logger()->info($prompt . '{dblack}{bg-dblack}{save}', [ 'save' => sprintf(\Eaw\Logger::ESCAPE, 's') ]);
+
+    $input = readline();
+
+    logger()->info('{up}{reset}{back}', [ 'up' => sprintf(\Eaw\Logger::ESCAPE, 'u'), 'back' => sprintf(\Eaw\Logger::ESCAPE, 'G') ]);
+
+    \Eaw\Logger::getInstance()->setDefaultFormat($oldFormat);
+
+    return $input;
+}
+
+function multiple_choice(string $message, array $options, string $default = null)
+{
+    $keys = array_keys($options);
+
+    logger()->info($message);
+
+    foreach ($options as $key => $option) {
+        logger()->info("  ({$key}) {$option}");
+    }
+
+    if ($default === null) {
+        $prompt = '[' . implode('/', $keys) . ']: ';
+    } else {
+        $prompt = '[' . implode('/', array_diff($keys, [ $default ])) . '/' . strtoupper($default) . ']: ';
+    }
+
+    do {
+        $input = strtolower(readline($prompt));
+    } while (!in_array($input, $keys));
+
+    return $input;
+}
+
 function tabelize(array $data, array $header = [], int $padding = 2)
 {
     // Find all column names.

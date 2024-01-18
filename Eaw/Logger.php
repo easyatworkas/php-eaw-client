@@ -11,9 +11,14 @@ use Psr\Log\LoggerInterface;
 
 class Logger implements FormatterInterface
 {
-    use IsSingleton;
+    use IsSingleton {
+        IsSingleton::__construct as private __singletonConstruct;
+    }
 
     const ESCAPE = "\033[%sm";
+
+    const FOREGROUND = 0;
+    const BACKGROUND = 10;
 
     const DARK = 30;
     const LIGHT = 90;
@@ -27,15 +32,71 @@ class Logger implements FormatterInterface
     const CYAN = 6;
     const GRAY = 7;
 
-    const RESET = 39;
+    const RESET = 0;
 
     /** @var string */
     protected $defaultName = 'default';
 
+    /** @var string */
     protected $defaultFormat = '{dyellow}[{datetime}]{reset} {lblack}{channel}.{reset}{level}: {message}{eol}';
+
+    /** @var string[] */
+    protected $colors = [];
 
     /** @var Monolog[] */
     protected $loggers = [];
+
+    protected function __construct()
+    {
+        $this->__singletonConstruct();
+
+        $zones = [
+            '' => static::FOREGROUND,
+            'bg-' => static::BACKGROUND,
+        ];
+
+        $intensities = [
+            'd' => static::DARK,
+            'l' => static::LIGHT,
+        ];
+
+        $colors = [
+            'black' => static::BLACK,
+            'red' => static::RED,
+            'green' => static::GREEN,
+            'yellow' => static::YELLOW,
+            'blue' => static::BLUE,
+            'magenta' => static::MAGENTA,
+            'cyan' => static::CYAN,
+            'gray' => static::GRAY,
+        ];
+
+        foreach ($zones as $zone => $zoneValue) {
+            foreach ($intensities as $intensity => $intensityValue) {
+                foreach ($colors as $color => $colorValue) {
+                    $this->colors[$zone . $intensity . $color] = sprintf(static::ESCAPE, $zoneValue + $intensityValue + $colorValue);
+                }
+            }
+        }
+
+        $this->colors['reset'] = sprintf(static::ESCAPE, static::RESET);
+    }
+
+    /**
+     * @param string $format
+     */
+    public function setDefaultFormat(string $format)
+    {
+        $this->defaultFormat = $format;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefaultFormat()
+    {
+        return $this->defaultFormat;
+    }
 
     /**
      * @return Monolog
@@ -57,29 +118,11 @@ class Logger implements FormatterInterface
                 $fileHandler = new StreamHandler($logFile, $fileLogLevel);
                 $fileHandler->setFormatter($this);
                 $fileHandler->pushProcessor(function ($record) {
-                    $record['context'] += [
-                        'level' => Monolog::getLevelName($record['level']),
-
-                        'lblack' => '',
-                        'lred' => '',
-                        'lgreen' => '',
-                        'lyellow' => '',
-                        'lblue' => '',
-                        'lmagenta' => '',
-                        'lcyan' => '',
-                        'lgray' => '',
-
-                        'dblack' => '',
-                        'dred' => '',
-                        'dgreen' => '',
-                        'dyellow' => '',
-                        'dblue' => '',
-                        'dmagenta' => '',
-                        'dcyan' => '',
-                        'dgray' => '',
-
-                        'reset' => '',
-                    ];
+                    // Replace all color codes with empty strings.
+                    $record['context']  = array_merge(
+                        $record['context'],
+                        array_fill_keys(array_keys($this->colors), '')
+                    );
 
                     return $record;
                 });
@@ -143,35 +186,13 @@ class Logger implements FormatterInterface
                 break;
         }
 
-        // TODO: Move colors to a reusable attribute.
         $record['context'] = array_merge([
             'datetime' => $record['datetime']->format('Y-m-d H:i:s'),
             'channel' => $record['channel'],
             'level' => $level,
             'message' => $record['message'],
-
             'eol' => PHP_EOL,
-
-            'lblack' => sprintf(static::ESCAPE, static::LIGHT + static::BLACK),
-            'lred' => sprintf(static::ESCAPE, static::LIGHT + static::RED),
-            'lgreen' => sprintf(static::ESCAPE, static::LIGHT + static::GREEN),
-            'lyellow' => sprintf(static::ESCAPE, static::LIGHT + static::YELLOW),
-            'lblue' => sprintf(static::ESCAPE, static::LIGHT + static::BLUE),
-            'lmagenta' => sprintf(static::ESCAPE, static::LIGHT + static::MAGENTA),
-            'lcyan' => sprintf(static::ESCAPE, static::LIGHT + static::CYAN),
-            'lgray' => sprintf(static::ESCAPE, static::LIGHT + static::GRAY),
-
-            'dblack' => sprintf(static::ESCAPE, static::DARK + static::BLACK),
-            'dred' => sprintf(static::ESCAPE, static::DARK + static::RED),
-            'dgreen' => sprintf(static::ESCAPE, static::DARK + static::GREEN),
-            'dyellow' => sprintf(static::ESCAPE, static::DARK + static::YELLOW),
-            'dblue' => sprintf(static::ESCAPE, static::DARK + static::BLUE),
-            'dmagenta' => sprintf(static::ESCAPE, static::DARK + static::MAGENTA),
-            'dcyan' => sprintf(static::ESCAPE, static::DARK + static::CYAN),
-            'dgray' => sprintf(static::ESCAPE, static::DARK + static::GRAY),
-
-            'reset' => sprintf(static::ESCAPE, static::RESET),
-        ], $record['context']);
+        ], $this->colors, $record['context']);
 
         return str_replace(
             array_map(function (string $key) {
