@@ -37,7 +37,7 @@ function logger(string $name = null)
 /**
  * An attempt at secret inputs using ANSI hackery.
  *
- * Needs improvement.
+ *
  *
  * @param string|null $prompt
  * @return false|string
@@ -76,6 +76,10 @@ function multiple_choice(string $message, array $options, string $default = null
 
     do {
         $input = strtolower(readline($prompt));
+
+        if ($input === '' && $default !== null) {
+            $input = $default;
+        }
     } while (!in_array($input, $keys));
 
     return $input;
