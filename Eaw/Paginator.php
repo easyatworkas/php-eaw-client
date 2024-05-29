@@ -68,7 +68,7 @@ class Paginator implements Iterator
      */
     public function current()
     {
-        $value = $this->data[$this->i] ?? null;
+        $value = $this->data[$this->keys[$this->i]] ?? null;
 
         if ($this->mapper !== null) {
             $value = call_user_func($this->mapper, $value);
@@ -135,9 +135,9 @@ class Paginator implements Iterator
      * @deprecated Don't use this method unless you really have to have everything from all pages.
      * @return T[]
      */
-    public function all()
+    public function all(bool $preserveKeys = false)
     {
-        return iterator_to_array($this, false);
+        return iterator_to_array($this, $preserveKeys);
     }
 
     public function each(callable $callback)
