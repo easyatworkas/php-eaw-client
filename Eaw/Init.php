@@ -8,9 +8,17 @@ abstract class Init
 {
     public static function init()
     {
+        $logger = Logger::getInstance();
+
+        $oldFormat = $logger->getDefaultFormat();
+
+        $logger->setDefaultFormat("{message}{eol}");
+
         if (static::auth() === null) {
             static::onboarding();
         }
+
+        $logger->setDefaultFormat($oldFormat);
     }
 
     /**
@@ -40,6 +48,7 @@ abstract class Init
         $authType = multiple_choice('How would you like to authenticate?', [
             'u' => 'User with email address and password.',
             'c' => 'Client with client ID and secret.',
+            'e' => 'Exit.',
         ]);
 
         switch ($authType) {
@@ -50,6 +59,9 @@ abstract class Init
             case 'u':
                 static::onboardingUser();
                 break;
+
+            case 'e':
+                exit;
         }
     }
 
