@@ -1,0 +1,24 @@
+#!/bin/sh
+
+IMAGE=php-eaw-client
+DIR="$(dirname "$(readlink -f "$0")")/.."
+CONF_DIR=${HOME}/.config/php-eaw-client
+AUTH_FILE=${CONF_DIR}/auth.json
+
+# If the image doesn't exist locally, build it.
+if [ -z "$(docker images -q ${IMAGE} 2> /dev/null)" ]; then
+  docker build "${DIR}" --tag ${IMAGE}
+fi
+
+# If the config directory doesn't exist, create it.
+if [ ! -d "${CONF_DIR}" ]; then
+  mkdir -p "${CONF_DIR}"
+fi
+
+# If the authentication file doesn't exist, create it.
+if [ ! -f "${AUTH_FILE}" ]; then
+  touch "${AUTH_FILE}"
+fi
+
+# Go!
+docker run --rm -it -v "${PWD}":/cwd -v "${AUTH_FILE}":/app/.auth.json ${IMAGE} "$@"
