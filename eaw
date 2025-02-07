@@ -1,0 +1,18 @@
+#!/bin/sh
+
+IMAGE=ghcr.io/easyatworkas/php-eaw-client:master
+CONF_DIR=${HOME}/.config/php-eaw-client
+AUTH_FILE=${CONF_DIR}/auth.json
+
+# If the config directory doesn't exist, create it.
+if [ ! -d "${CONF_DIR}" ]; then
+  mkdir -p "${CONF_DIR}"
+fi
+
+# If the authentication file doesn't exist, create it.
+if [ ! -f "${AUTH_FILE}" ]; then
+  touch "${AUTH_FILE}"
+fi
+
+# Go!
+docker run --rm -it -v "${PWD}":/cwd -v "${AUTH_FILE}":/app/.auth.json ${IMAGE} "$@"
