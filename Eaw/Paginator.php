@@ -141,9 +141,34 @@ class Paginator implements Iterator
      * @deprecated Don't use this method unless you really have to have everything from all pages.
      * @return T[]
      */
-    public function all(bool $preserveKeys = false)
+    public function all()
     {
-        return iterator_to_array($this, $preserveKeys);
+        $allData = [
+            $this->current_page => $this->data,
+        ];
+
+        for ($i = $this->current_page + 1; $i <= $this->last_page; $i++) {
+            $this->client->readAsync($this->path, [ 'page' => $i ] + $this->query)
+                ->then(function (array $response) use ($i, &$allData) {
+                    if ($this->mapper === null) {
+                        $allData[$i] = $response['data'];
+                    } else {
+                        $allData[$i] = [];
+
+                        foreach ($response['data'] as $key => $value) {
+                            $allData[$i][$key] = call_user_func($this->mapper, $value);
+                        }
+                    }
+                });
+
+            $this->client->tick();
+        }
+
+        $this->client->execute();
+
+        ksort($allData);
+
+        return array_merge(... $allData);
     }
 
     public function each(callable $callback)
