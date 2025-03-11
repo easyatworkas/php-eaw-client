@@ -3,6 +3,7 @@
 namespace Eaw;
 
 use Iterator;
+use ReturnTypeWillChange;
 
 /**
  * @template T
@@ -66,6 +67,7 @@ class Paginator implements Iterator
     /**
      * @return T
      */
+    #[ReturnTypeWillChange]
     public function current()
     {
         $value = $this->data[$this->keys[$this->i]] ?? null;
@@ -77,6 +79,7 @@ class Paginator implements Iterator
         return $value;
     }
 
+    #[ReturnTypeWillChange]
     public function next()
     {
         $this->i++;
@@ -88,16 +91,19 @@ class Paginator implements Iterator
         return $this;
     }
 
+    #[ReturnTypeWillChange]
     public function key()
     {
         return $this->keys[$this->i] ?? null;
     }
 
+    #[ReturnTypeWillChange]
     public function valid()
     {
         return array_key_exists($this->key(), $this->data);
     }
 
+    #[ReturnTypeWillChange]
     public function rewind()
     {
         // loadPage() calls init(), which does reset i, but only if we're not already on page 1.
