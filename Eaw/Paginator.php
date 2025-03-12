@@ -180,6 +180,25 @@ class Paginator implements Iterator
         return $this;
     }
 
+    public function first(callable $callback = null)
+    {
+        if ($this->i != 0) {
+            $this->rewind();
+        }
+
+        if ($callback === null) {
+            return reset($this->data);
+        }
+
+        foreach ($this as $key => $value) {
+            if (call_user_func($callback, $value, $key)) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
     public function __get($var)
     {
         return $this->meta[$var] ?? null;
