@@ -150,15 +150,7 @@ class Paginator implements Iterator
         for ($i = $this->current_page + 1; $i <= $this->last_page; $i++) {
             $this->client->readAsync($this->path, [ 'page' => $i ] + $this->query)
                 ->then(function (array $response) use ($i, &$allData) {
-                    if ($this->mapper === null) {
-                        $allData[$i] = $response['data'];
-                    } else {
-                        $allData[$i] = [];
-
-                        foreach ($response['data'] as $key => $value) {
-                            $allData[$i][$key] = call_user_func($this->mapper, $value);
-                        }
-                    }
+                    $allData[$i] = $response['data'];
                 });
 
             $this->client->tick();
@@ -168,7 +160,15 @@ class Paginator implements Iterator
 
         ksort($allData);
 
-        return array_merge(... $allData);
+        $allData = array_merge(... $allData);
+
+        if ($this->mapper !== null) {
+            foreach ($allData as $key => $value) {
+                $allData[$key] = call_user_func($this->mapper, $value);
+            }
+        }
+
+        return $allData;
     }
 
     public function each(callable $callback)
