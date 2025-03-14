@@ -130,6 +130,10 @@ class Paginator implements Iterator
         return $this;
     }
 
+    /**
+     * @param callable(array):T $mapper
+     * @return $this
+     */
     public function setMapper(callable $mapper)
     {
         $this->mapper = $mapper;

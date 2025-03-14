@@ -29,8 +29,9 @@ class QueryBuilder
     }
 
     /**
-     * @param class-string<T> $model
-     * @return $this
+     * @template C
+     * @param class-string<C> $model
+     * @return self<C>
      */
     public function setModel(string $model)
     {
@@ -78,7 +79,7 @@ class QueryBuilder
     }
 
     /**
-     * @return Paginator<array|T>
+     * @return Paginator<array>|Paginator<T>
      */
     public function getAll()
     {
